@@ -1,0 +1,32 @@
+To run the command in the background and ensure it continues running after your SSH session closes, you can use a couple of different methods. One popular way is to use `nohup` along with `&`. Here's how you can do it:
+
+1. **Log in to your server via SSH**.
+
+2. **Run the command using `nohup`**:
+   ```bash
+   nohup python run_plm.py --adapt --grad-accum-steps 32 --plm-type llama --plm-size base --rank 128 --device cuda:0 --device-out cuda:1 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2 > output.log 2>&1 &
+   ```
+
+   - `nohup` stands for "no hang up" and prevents the process from being terminated when the user logs out.
+   - `> output.log` redirects the standard output (stdout) to a file named `output.log`.
+   - `2>&1` redirects the standard error (stderr) to the same file as standard output.
+   - `&` runs the process in the background.
+
+3. **Check the process** (optional):
+   After running the command, you can check if the process is running with:
+   ```bash
+   ps aux | grep run_plm.py
+   ```
+
+4. **Log out of your SSH session**. The command will keep running in the background.
+
+When you want to see the output or check for any errors, you can view the `output.log` file with:
+```bash
+cat output.log
+```
+or
+```bash
+tail -f output.log
+```
+
+This method is quite effective for long-running processes and ensures they continue to run even if your SSH session is closed.
