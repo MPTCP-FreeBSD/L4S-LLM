@@ -243,6 +243,9 @@ class OfflineRLPolicy(nn.Module):
         self.returns_dq.append(return_embeddings)
         self.states_dq.append(state_embeddings) 
         self.actions_dq.append(action_embeddings)
+        print("***********************************")
+        print(bitrate)
+        print("***********************************")
 
 
         # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
