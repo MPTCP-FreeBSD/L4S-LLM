@@ -160,7 +160,9 @@ class OfflineRLPolicy(nn.Module):
         # Open the file in append mode ('a') and write the content
         with open("bitrate_output.txt", 'a') as file:
             file.write("***********************************\n")
-            file.write(f"{bitrate}\n")
+            file.write(f"bitrate: {bitrate}\n")
+            file.write(f"action_pred: {action_pred}\n")
+            file.write(f"action_pred1: {action_pred1}\n")
             file.write("***********************************\n")
 
         # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
