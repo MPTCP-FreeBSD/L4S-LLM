@@ -157,6 +157,11 @@ class OfflineRLPolicy(nn.Module):
         action_pred1 = action_pred.reshape(-1)
         bitrate, _ = self._sample(action_pred1)
 
+        # Open the file in append mode ('a') and write the content
+        with open("bitrate_output.txt", 'a') as file:
+            file.write("***********************************\n")
+            file.write(f"{bitrate}\n")
+            file.write("***********************************\n")
 
         # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
         with open('rl_policy_output_forward.txt', 'w') as file:
@@ -243,9 +248,6 @@ class OfflineRLPolicy(nn.Module):
         self.returns_dq.append(return_embeddings)
         self.states_dq.append(state_embeddings) 
         self.actions_dq.append(action_embeddings)
-        print("***********************************")
-        print(bitrate)
-        print("***********************************")
 
 
         # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
