@@ -285,6 +285,8 @@ class OfflineRLPolicy(nn.Module):
             file.write(f"pi: {pi}\n")
             file.write(f"idx: {idx}\n")
             file.write(f"np.arange(pi.size): {np.arange(pi.size)}\n")
+            file.write(f"random.choices(np.arange(pi.size), pi): {random.choices(np.arange(pi.size), pi)}\n")
+            file.write(f"pi[idx]: {pi[idx]}\n")
             file.write(f"lgprob: {lgprob}\n")
             file.write("***********************************\n")
         return idx, lgprob
