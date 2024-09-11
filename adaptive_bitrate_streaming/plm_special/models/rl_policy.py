@@ -279,4 +279,12 @@ class OfflineRLPolicy(nn.Module):
         pi = F.softmax(logits, 0).cpu().detach().numpy()
         idx = random.choices(np.arange(pi.size), pi)[0]
         lgprob = np.log(pi[idx])
+        # Open the file in append mode ('a') and write the content
+        with open("_sample_output.txt", 'a') as file:
+            file.write("***********************************\n")
+            file.write(f"pi: {pi}\n")
+            file.write(f"idx: {idx}\n")
+            file.write(f"np.arange(pi.size): {np.arange(pi.size)}\n")
+            file.write(f"lgprob: {lgprob}\n")
+            file.write("***********************************\n")
         return idx, lgprob
