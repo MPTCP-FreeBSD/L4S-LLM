@@ -88,6 +88,22 @@ class OfflineRLPolicy(nn.Module):
         """
         Forward function, used for training.
         """
+
+        # Open the file in append mode ('a') and write the content
+        with open("rsat_output.txt", 'a') as file:
+            file.write("***********************************\n")
+            file.write(f"states.shape: {states.shape}\n")
+            file.write(f"actions.shape: {actions.shape}\n")
+            file.write(f"returns.shape: {returns.shape}\n")
+            file.write(f"timesteps.shape: {timesteps.shape}\n")
+            file.write(f"states: {states}\n")
+            file.write(f"actions: {actions}\n")
+            file.write(f"returns: {returns}\n")
+            file.write(f"timesteps: {timesteps}\n")
+            file.write("***********************************\n")
+
+
+
         assert actions.shape[0] == 1, 'batch size should be 1 to avoid CUDA memory exceed'
 
         print("forward Function started in rlpolicy")
@@ -161,8 +177,14 @@ class OfflineRLPolicy(nn.Module):
         with open("bitrate_output.txt", 'a') as file:
             file.write("***********************************\n")
             file.write(f"bitrate: {bitrate}\n")
+            file.write(f"action_pred.shape: {action_pred.shape}\n")
+            file.write(f"action_pred1.shape: {action_pred1.shape}\n")
             file.write(f"action_pred: {action_pred}\n")
             file.write(f"action_pred1: {action_pred1}\n")
+            file.write(f"logits.shape: {logits.shape}\n")
+            file.write(f"logits: {logits}\n")
+            file.write(f"logits_used.shape: {logits_used.shape}\n")
+            file.write(f"logits_used: {logits}\n")
             file.write("***********************************\n")
 
         # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
@@ -238,7 +260,7 @@ class OfflineRLPolicy(nn.Module):
         # Step 6: predict the bitrate for next chunk
         logits_used = logits[:, -1:]
         action_pred = self.action_head(logits_used)
-        action_pred = action_pred.reshape(-1)
+        action_pred = action_pred.reshape(-1) 
         bitrate, _ = self._sample(action_pred)
 
         # compute action embeddings 
