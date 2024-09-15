@@ -46,8 +46,8 @@ class OfflineRLPolicy(nn.Module):
         self.embed_action = nn.Linear(1, plm_embed_size).to(device)
         self.embed_state1 = nn.Linear(state_feature_dim, plm_embed_size).to(device)
         self.embed_state2 = nn.Linear(state_feature_dim, plm_embed_size).to(device)    
-        self.embed_state3 = nn.Linear(state_feature_dim * (6 - conv_size + 1), plm_embed_size).to(device)    
-        self.embed_state4 = nn.Linear(state_feature_dim * (6 - conv_size + 1), plm_embed_size).to(device)    
+        self.embed_state3 = nn.Linear(state_feature_dim, plm_embed_size).to(device)    
+        self.embed_state4 = nn.Linear(state_feature_dim, plm_embed_size).to(device)    
         self.embed_state5 = nn.Linear(state_feature_dim, plm_embed_size).to(device)
         self.embed_state6 = nn.Linear(state_feature_dim, plm_embed_size).to(device)    
 
