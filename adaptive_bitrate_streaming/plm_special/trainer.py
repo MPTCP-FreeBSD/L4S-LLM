@@ -27,8 +27,9 @@ class Trainer:
         self.dataloader = DataLoader(exp_dataset, batch_size, shuffle=True, pin_memory=True)
     
     def tensor_to_list(self, tensor):
-        # Convert tensor to NumPy array and then to a list
-        return tensor.cpu().numpy().tolist()
+        # Detach the tensor and then convert it to a NumPy array and then to a list
+        return tensor.detach().cpu().numpy().tolist()
+
 
     def train_epoch(self, epoch, report_loss_per_steps=100):
         train_losses = []
