@@ -1,0 +1,5 @@
+apt update
+apt install screen
+screen -S screen1
+screen -ls
+screen -r screen1
