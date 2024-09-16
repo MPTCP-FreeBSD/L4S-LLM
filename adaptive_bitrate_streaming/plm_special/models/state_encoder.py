@@ -35,8 +35,8 @@ class EncoderNetwork(nn.Module):
     def forward(self, state):
         # state.shape: (batch_size, seq_len, 6, 6) -> (batch_size x seq_len, 6, 6)
         batch_size, seq_len = state.shape[0], state.shape[1]
-        print("state.shape[0]",state.shape[0])
-        print("state.shape[1]",state.shape[1])
+        # print("state.shape[0]",state.shape[0])
+        # print("state.shape[1]",state.shape[1])
         # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
         with open('output_life.txt', 'w') as file:
             # Write the type of the tensor
@@ -49,7 +49,7 @@ class EncoderNetwork(nn.Module):
             file.write(f"{state}\n")
 
         # Optional: print to console for verification
-        print("Output written to output_life.txt")
+        # print("Output written to output_life.txt")
         state = state.reshape(batch_size * seq_len, 8, 1)
         
         # last_bitrate = state[..., 0:1, -1]

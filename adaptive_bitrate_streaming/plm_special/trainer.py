@@ -26,6 +26,7 @@ class Trainer:
     def train_epoch(self, report_loss_per_steps=100):
         train_losses = []
         logs = dict()
+        custom_logs={}
 
         train_start = time.time()
         dataset_size = len(self.dataloader)
@@ -44,6 +45,8 @@ class Trainer:
                 self.optimizer.zero_grad(set_to_none=True)
                 if self.lr_scheduler is not None:
                     self.lr_scheduler.step()
+            print(f'Step {step} - train_loss.item() {train_loss.item()}')
+
 
             if step % report_loss_per_steps == 0:                
                 mean_train_loss = np.mean(train_losses)
@@ -53,7 +56,13 @@ class Trainer:
         logs['training/train_loss_mean'] = np.mean(train_losses)
         logs['training/train_loss_std'] = np.std(train_losses)
 
-        return logs, train_losses
+
+        custom_logs['time/training'] = time.time() - train_start
+        custom_logs['training/train_loss_mean'] = np.mean(train_losses)
+        custom_logs['training/train_loss_std'] = np.std(train_losses)
+        custom_logs['train_losses']=train_losses
+
+        return logs, train_losses, custom_logs
 
     def train_step(self, batch):
         states, actions, returns, timesteps, labels = process_batch(batch, device=self.device)

@@ -89,6 +89,7 @@ def load_model(args, model, model_dir):
     return model
 
 
+
 def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpoint_dir, best_model_dir, eval_process_reward_fn):
     optimizer = AdamW(
         model.parameters(),
@@ -105,10 +106,27 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
 
     target_return = exp_dataset_info.max_return * args.target_return_scale
     best_eval_return = 0.
+    import json
+
+    # Define the folder name
+    log_folder = 'epoch_logs'
+
+    # Create the folder if it doesn't exist
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
 
     total_train_losses = []
     for epoch in range(args.num_epochs):
-        train_logs, train_losses = trainer.train_epoch()
+        train_logs, train_losses, custom_logs = trainer.train_epoch()
+        # Define the filename for the current epoch's logs
+        custom_log_name = os.path.join(log_folder, f"epoch_{epoch}.json")
+        
+        # Save custom_logs to a JSON file
+        with open(custom_log_name, 'w') as file:
+            json.dump(custom_logs, file, indent=4)
+        
+        print(f"Epoch {epoch}: Logs saved to {custom_log_name}")
+        
         total_train_losses.extend(train_losses)
         print('='* 20, f'Training Iteration #{epoch}', '=' * 20)
         print('>' * 10, 'Training Information:')
@@ -121,20 +139,22 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
             save_model(args, model, checkpoint_dir_epoch)
             print('Checkpoint saved at:', checkpoint_dir_epoch)
 
-        if epoch % args.eval_per_epoch == 0:
-            eval_logs = evaluate_on_env(args, env_settings=eval_env_settings, model=model, target_return=target_return, max_ep_num=args.trace_num,
-                                        process_reward_fn=eval_process_reward_fn)
-            episodes_return = eval_logs['episodes_return']
-            if best_eval_return < episodes_return:
-                best_eval_return = episodes_return
-                save_model(args, model, best_model_dir)
-                print('Best model saved at:', best_model_dir)
+        # if epoch % args.eval_per_epoch == 0:
+        #     eval_logs = evaluate_on_env(args, env_settings=eval_env_settings, model=model, target_return=target_return, max_ep_num=args.trace_num,
+        #                                 process_reward_fn=eval_process_reward_fn)
+        #     episodes_return = eval_logs['episodes_return']
+        #     if best_eval_return < episodes_return:
+        #         best_eval_return = episodes_return
+        #         save_model(args, model, best_model_dir)
+        #         print('Best model saved at:', best_model_dir)
 
-            eval_logs['best_return'] = best_eval_return
-            print('>' * 10, 'Evaluation Information')
-            pprint(eval_logs)
+        #     eval_logs['best_return'] = best_eval_return
+        #     print('>' * 10, 'Evaluation Information')
+        #     pprint(eval_logs)
     # save training losses
     train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
+    np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
+    train_losses_path = os.path.join('./train_losses.txt')
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
 
 
@@ -157,6 +177,8 @@ def run(args):
 
     # 1. set seed
     set_random_seed(args.seed)
+
+
 
     # 2. create environment setting
     trace_dir = cfg.trace_dirs[args.trace]
