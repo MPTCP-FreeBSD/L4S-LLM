@@ -59,7 +59,6 @@ class Trainer:
                 'step': step,
                 'train_loss': train_loss.item(),
                 'actions_pred1': self.tensor_to_list(actions_pred1),
-                'actions_pred': self.tensor_to_list(actions_pred1.permute(0, 2, 1)),
                 'states': self.tensor_to_list(states),
                 'actions': self.tensor_to_list(actions),
                 'returns': self.tensor_to_list(returns),
