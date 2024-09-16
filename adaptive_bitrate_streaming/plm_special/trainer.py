@@ -1,11 +1,14 @@
 import numpy as np
 import torch
 import time
+import json
 
 from munch import Munch
 from torch.utils.data import DataLoader
 
 from plm_special.utils.utils import process_batch
+
+
 
 
 class Trainer:
@@ -22,18 +25,22 @@ class Trainer:
         
         self.exp_dataset_info = Munch(exp_dataset.exp_dataset_info)
         self.dataloader = DataLoader(exp_dataset, batch_size, shuffle=True, pin_memory=True)
+    
+    def tensor_to_list(self, tensor):
+        # Convert tensor to NumPy array and then to a list
+        return tensor.cpu().numpy().tolist()
 
-    def train_epoch(self, report_loss_per_steps=100):
+    def train_epoch(self, epoch, report_loss_per_steps=100):
         train_losses = []
         logs = dict()
-        custom_logs={}
+        custom_logs = {'steps': []}
 
         train_start = time.time()
         dataset_size = len(self.dataloader)
 
         self.model.train()
         for step, batch in enumerate(self.dataloader):
-            train_loss = self.train_step(batch)
+            train_loss, states, actions, returns, timesteps, labels, actions_pred1 = self.train_step(batch,epoch,step)
             train_losses.append(train_loss.item())
 
             # perform gradient accumulation update
@@ -46,7 +53,19 @@ class Trainer:
                 if self.lr_scheduler is not None:
                     self.lr_scheduler.step()
             print(f'Step {step} - train_loss.item() {train_loss.item()}')
-
+            # Log step information
+            step_logs = {
+                'step': step,
+                'train_loss': train_loss.item(),
+                'actions_pred1': self.tensor_to_list(actions_pred1),
+                'actions_pred': self.tensor_to_list(actions_pred1.permute(0, 2, 1)),
+                'states': self.tensor_to_list(states),
+                'actions': self.tensor_to_list(actions),
+                'returns': self.tensor_to_list(returns),
+                'timesteps': self.tensor_to_list(timesteps),
+                'labels': self.tensor_to_list(labels),
+            }
+            custom_logs['steps'].append(step_logs)
 
             if step % report_loss_per_steps == 0:                
                 mean_train_loss = np.mean(train_losses)
@@ -55,16 +74,14 @@ class Trainer:
         logs['time/training'] = time.time() - train_start
         logs['training/train_loss_mean'] = np.mean(train_losses)
         logs['training/train_loss_std'] = np.std(train_losses)
+        
+        # Save custom logs to a JSON file for this epoch
+        with open(f'custom_logs_epoch_{epoch}.json', 'w') as file:
+            json.dump(custom_logs, file, indent=4)
 
+        return logs, train_losses
 
-        custom_logs['time/training'] = time.time() - train_start
-        custom_logs['training/train_loss_mean'] = np.mean(train_losses)
-        custom_logs['training/train_loss_std'] = np.std(train_losses)
-        custom_logs['train_losses']=train_losses
-
-        return logs, train_losses, custom_logs
-
-    def train_step(self, batch):
+    def train_step(self, batch,epoch,step):
         states, actions, returns, timesteps, labels = process_batch(batch, device=self.device)
         actions_pred1 = self.model(states, actions, returns, timesteps)
         actions_pred = actions_pred1.permute(0, 2, 1)
@@ -86,4 +103,4 @@ class Trainer:
             file.write(f"timesteps: {timesteps}\n")
             file.write(f"labels: {labels}\n")
  
-        return loss
+        return loss, states, actions, returns, timesteps, labels, actions_pred1

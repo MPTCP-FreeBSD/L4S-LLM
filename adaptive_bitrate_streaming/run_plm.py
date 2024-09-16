@@ -89,7 +89,6 @@ def load_model(args, model, model_dir):
     return model
 
 
-
 def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpoint_dir, best_model_dir, eval_process_reward_fn):
     optimizer = AdamW(
         model.parameters(),
@@ -106,27 +105,10 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
 
     target_return = exp_dataset_info.max_return * args.target_return_scale
     best_eval_return = 0.
-    import json
-
-    # Define the folder name
-    log_folder = 'epoch_logs'
-
-    # Create the folder if it doesn't exist
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
 
     total_train_losses = []
     for epoch in range(args.num_epochs):
-        train_logs, train_losses, custom_logs = trainer.train_epoch()
-        # Define the filename for the current epoch's logs
-        custom_log_name = os.path.join(log_folder, f"epoch_{epoch}.json")
-        
-        # Save custom_logs to a JSON file
-        with open(custom_log_name, 'w') as file:
-            json.dump(custom_logs, file, indent=4)
-        
-        print(f"Epoch {epoch}: Logs saved to {custom_log_name}")
-        
+        train_logs, train_losses = trainer.train_epoch(epoch)
         total_train_losses.extend(train_losses)
         print('='* 20, f'Training Iteration #{epoch}', '=' * 20)
         print('>' * 10, 'Training Information:')
@@ -154,8 +136,6 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
     # save training losses
     train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
-    train_losses_path = os.path.join('./train_losses.txt')
-    np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
 
 
 def test(args, model, exp_dataset_info, env_settings, model_dir, result_dir, test_process_reward_fn):
@@ -177,8 +157,6 @@ def run(args):
 
     # 1. set seed
     set_random_seed(args.seed)
-
-
 
     # 2. create environment setting
     trace_dir = cfg.trace_dirs[args.trace]
