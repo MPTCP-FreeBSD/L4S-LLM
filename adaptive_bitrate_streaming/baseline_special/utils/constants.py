@@ -7,7 +7,7 @@ REBUF_PENALTY = 4.3  # 1 sec rebuffering -> 3 Mbps
 SMOOTH_PENALTY = 1
 DEFAULT_QUALITY = 0  # default video quality without agent
 
-BITRATE_LEVELS = 6
+BITRATE_LEVELS = 3
 
 
 # bit_rate, buffer_size, next_chunk_size, bandwidth_measurement (throughput and time), chunk_til_video_end
