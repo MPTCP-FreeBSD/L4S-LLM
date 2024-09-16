@@ -86,22 +86,5 @@ class Trainer:
         states, actions, returns, timesteps, labels = process_batch(batch, device=self.device)
         actions_pred1 = self.model(states, actions, returns, timesteps)
         actions_pred = actions_pred1.permute(0, 2, 1)
-        loss = self.loss_fn(actions_pred, labels)
-        # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
-        with open('trainer_step.txt', 'w') as file:
-            file.write(f"actions_pred1.shape: {actions_pred1.shape}\n")
-            file.write(f"actions_pred.shape: {actions_pred.shape}\n")    
-            file.write(f"states.shape: {states.shape}\n")
-            file.write(f"actions.shape: {actions.shape}\n")
-            file.write(f"returns.shape: {returns.shape}\n")
-            file.write(f"timesteps.shape: {timesteps.shape}\n")
-            file.write(f"labels.shape: {labels.shape}\n")
-            file.write(f"actions_pred1: {actions_pred1}\n")
-            file.write(f"actions_pred: {actions_pred}\n")    
-            file.write(f"states: {states}\n")
-            file.write(f"actions: {actions}\n")
-            file.write(f"returns: {returns}\n")
-            file.write(f"timesteps: {timesteps}\n")
-            file.write(f"labels: {labels}\n")
- 
+        loss = self.loss_fn(actions_pred, labels) 
         return loss, states, actions, returns, timesteps, labels, actions_pred1

@@ -37,16 +37,6 @@ class EncoderNetwork(nn.Module):
         batch_size, seq_len = state.shape[0], state.shape[1]
         # print("state.shape[0]",state.shape[0])
         # print("state.shape[1]",state.shape[1])
-        # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
-        with open('output_life.txt', 'w') as file:
-            # Write the type of the tensor
-            file.write(f"type,,state: {type(state)}\n")
-            # Write the batch size and sequence length
-            file.write(f"batch_size,,state.shape[0]: {state.shape[0]}\n")
-            file.write(f"seq_len,,state.shape[1]: {state.shape[1]}\n")
-            # Write the tensor values
-            file.write("Tensor values:\n")
-            file.write(f"{state}\n")
 
         # Optional: print to console for verification
         # print("Output written to output_life.txt")

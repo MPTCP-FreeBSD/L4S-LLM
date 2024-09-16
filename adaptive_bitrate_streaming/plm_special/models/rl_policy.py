@@ -71,42 +71,12 @@ class OfflineRLPolicy(nn.Module):
             self.embed_state1, self.embed_state2, self.embed_state3, self.embed_state4, self.embed_state5,
             self.embed_state6, self.action_head
         ])
-        
-        # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
-        with open('rl_policy_output_init.txt', 'w') as file:
-            file.write(f"plm_embed_size: {plm_embed_size}\n")
-            file.write(f"device: {device}\n")
-            file.write(f"max_length: {max_length}\n")
-            file.write(f"conv_size: {conv_size}\n")
-            file.write(f"which_layer: {which_layer}\n")
-            file.write(f"bitrate_levels: {bitrate_levels}\n")
-            file.write(f"max_ep_len: {max_ep_len}\n")
-            file.write(f"state_feature_dim: {state_feature_dim}\n")
-
 
     def forward(self, states, actions, returns, timesteps, attention_mask=None):
         """
         Forward function, used for training.
         """
-
-        # Open the file in append mode ('a') and write the content
-        with open("rsat_output.txt", 'a') as file:
-            file.write("***********************************\n")
-            file.write(f"states.shape: {states.shape}\n")
-            file.write(f"actions.shape: {actions.shape}\n")
-            file.write(f"returns.shape: {returns.shape}\n")
-            file.write(f"timesteps.shape: {timesteps.shape}\n")
-            file.write(f"states: {states}\n")
-            file.write(f"actions: {actions}\n")
-            file.write(f"returns: {returns}\n")
-            file.write(f"timesteps: {timesteps}\n")
-            file.write("***********************************\n")
-
-
-
         assert actions.shape[0] == 1, 'batch size should be 1 to avoid CUDA memory exceed'
-
-        print("forward Function started in rlpolicy")
 
         # Step 1: process actions, returns and timesteps first as they are simple
         actions = actions.to(self.device)  # shape: (1, seq_len, 1)
@@ -170,37 +140,6 @@ class OfflineRLPolicy(nn.Module):
         logits_used = logits[:, action_embed_positions - 2]
         action_pred = self.action_head(logits_used)
 
-        action_pred1 = action_pred.reshape(-1)
-        bitrate, _ = self._sample(action_pred1)
-
-        # Open the file in append mode ('a') and write the content
-        with open("bitrate_output.txt", 'a') as file:
-            file.write("***********************************\n")
-            file.write(f"bitrate: {bitrate}\n")
-            file.write(f"action_pred.shape: {action_pred.shape}\n")
-            file.write(f"action_pred1.shape: {action_pred1.shape}\n")
-            file.write(f"action_pred: {action_pred}\n")
-            file.write(f"action_pred1: {action_pred1}\n")
-            file.write(f"logits.shape: {logits.shape}\n")
-            file.write(f"logits: {logits}\n")
-            file.write(f"logits_used.shape: {logits_used.shape}\n")
-            file.write(f"logits_used: {logits}\n")
-            file.write("***********************************\n")
-
-        # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
-        with open('rl_policy_output_forward.txt', 'w') as file:
-            # Write the type of the tensor
-            # file.write(f"type,,state: {type(state)}\n")
-            # Write the batch size and sequence length
-            file.write(f"bitrate: {bitrate}\n")
-            file.write(f"action_pred: {action_pred}\n")
-            file.write(f"states_features: {states_features}\n")
-            file.write(f"action_embeddings: {action_embeddings}\n")
-            file.write(f"states: {states}\n")
-            file.write(f"actions: {actions}\n")
-            file.write(f"returns: {returns}\n")
-            file.write(f"timesteps: {timesteps}\n")
-
         return action_pred
 
     def sample(self, state, target_return, timestep, **kwargs):
@@ -260,7 +199,7 @@ class OfflineRLPolicy(nn.Module):
         # Step 6: predict the bitrate for next chunk
         logits_used = logits[:, -1:]
         action_pred = self.action_head(logits_used)
-        action_pred = action_pred.reshape(-1) 
+        action_pred = action_pred.reshape(-1)
         bitrate, _ = self._sample(action_pred)
 
         # compute action embeddings 
@@ -272,19 +211,6 @@ class OfflineRLPolicy(nn.Module):
         self.returns_dq.append(return_embeddings)
         self.states_dq.append(state_embeddings) 
         self.actions_dq.append(action_embeddings)
-
-
-        # Open the file in write mode. This will create the file if it doesn't exist or overwrite it if it does.
-        with open('rl_policy_output_sample.txt', 'w') as file:
-            # Write the type of the tensor
-            # file.write(f"type,,state: {type(state)}\n")
-            # Write the batch size and sequence length
-            file.write(f"bitrate: {bitrate}\n")
-            file.write(f"action_pred: {action_pred}\n")
-            file.write(f"action_tensor: {action_tensor}\n")
-            file.write(f"action_embeddings: {action_embeddings}\n")
-            file.write(f"state_embeddings: {state_embeddings}\n")
-            file.write(f"return_embeddings: {return_embeddings}\n")
 
         return bitrate
     
@@ -298,17 +224,7 @@ class OfflineRLPolicy(nn.Module):
         self.returns_dq.append(torch.zeros((1, 0, self.plm_embed_size), device=self.device))
 
     def _sample(self, logits):
-        pi = F.softmax(logits, 0).cpu().detach().numpy()
+        pi = F.softmax(logits, 0).cpu().numpy()
         idx = random.choices(np.arange(pi.size), pi)[0]
         lgprob = np.log(pi[idx])
-        # Open the file in append mode ('a') and write the content
-        with open("_sample_output.txt", 'a') as file:
-            file.write("***********************************\n")
-            file.write(f"pi: {pi}\n")
-            file.write(f"idx: {idx}\n")
-            file.write(f"np.arange(pi.size): {np.arange(pi.size)}\n")
-            file.write(f"random.choices(np.arange(pi.size), pi): {random.choices(np.arange(pi.size), pi)}\n")
-            file.write(f"pi[idx]: {pi[idx]}\n")
-            file.write(f"lgprob: {lgprob}\n")
-            file.write("***********************************\n")
         return idx, lgprob
