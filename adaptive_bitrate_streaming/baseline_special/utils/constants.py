@@ -11,8 +11,8 @@ BITRATE_LEVELS = 6
 
 
 # bit_rate, buffer_size, next_chunk_size, bandwidth_measurement (throughput and time), chunk_til_video_end
-S_INFO = 6
-S_LEN = 6  # take how many frames in the past
+S_INFO = 1
+S_LEN = 1  # take how many frames in the past
 # jump-action dim
 A_DIM = 3
 ACTOR_LR_RATE = 0.0001
