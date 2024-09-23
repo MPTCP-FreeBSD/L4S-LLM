@@ -54,7 +54,7 @@ class OfflineRLPolicy(nn.Module):
         self.embed_ln = nn.LayerNorm(plm_embed_size).to(device)
         # =========== multimodal encoder (end) ===========
     
-        self.action_head = nn.Linear(plm_embed_size, bitrate_levels).to(device)  # the so-called networking head in our paper
+        self.action_head = nn.Linear(plm_embed_size, bitrate_levels).to(device)  # the so-called L4S head in our paper
 
         self.device = device
         self.device_out = device_out

@@ -39,3 +39,17 @@ python run_plm.py --adapt --grad-accum-steps 32 --plm-type llama --plm-size base
 
 Test performance of NetLLM:
 python run_plm.py --test --grad-accum-steps 32 --plm-type llama --plm-size base --rank 128 --device cuda:0 --device-out cuda:1 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+
+
+
+
+
+
+ssh root@69.30.85.70 -p 22071 -i ~/.ssh/id_ed25519
+
+
+
+scp -P 22071 -p -i ~/.ssh/id_ed25519 -r root@69.30.85.70:/workspace/L4S-LLM/adaptive_bitrate_streaming/Log Data /log_data
+
+/workspace/L4S-LLM/adaptive_bitrate_streaming/Log Data
