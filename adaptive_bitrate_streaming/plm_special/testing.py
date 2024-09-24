@@ -39,10 +39,8 @@ class Tester:
 
         test_start = time.time()
         dataset_size = len(self.dataloader)
-
-        self.model.test()
         for step, batch in enumerate(self.dataloader):
-            test_loss, accuracy, states, actions, returns, timesteps, labels, actions_pred1 = self.test_step(batch,epoch,step)
+            test_loss, accuracy, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = self.test_step(batch,epoch,step)
             test_losses.append(test_loss.item())
             
             # CPU and RAM usage
@@ -98,7 +96,7 @@ class Tester:
         logs['testing/test_loss_std'] = np.std(test_losses)
         
         # Save custom logs to a JSON file for this epoch
-        with open(f'custom_logs_epoch_{epoch}.json', 'w') as file:
+        with open(f'custom_logs_epoch_test_{epoch}.json', 'w') as file:
             json.dump(custom_logs, file, indent=4)
 
         return logs, test_losses
@@ -114,5 +112,5 @@ class Tester:
         correct = (predicted == labels).sum().item()
         accuracy = correct / labels.numel()  # Assuming labels are of shape (batch_size, seq_len)
 
-        return loss, accuracy, states, actions, returns, timesteps, labels, actions_pred1
+        return loss, accuracy, states, actions, returns, timesteps, labels, actions_pred1, actions_pred
 

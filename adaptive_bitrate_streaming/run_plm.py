@@ -15,6 +15,7 @@ from config import cfg
 from baseline_special.utils.utils import load_traces
 from baseline_special.utils.constants import BITRATE_LEVELS
 from plm_special.trainer import Trainer
+from plm_special.testing import Tester
 from plm_special.evaluate import evaluate_on_env
 from plm_special.test import test_on_env
 from plm_special.data.dataset import ExperienceDataset
@@ -107,6 +108,8 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
     best_eval_return = 0.
 
     total_train_losses = []
+    min_loss=np.inf
+
     for epoch in range(args.num_epochs):
         train_logs, train_losses = trainer.train_epoch(epoch)
         total_train_losses.extend(train_losses)
@@ -120,31 +123,42 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
                 os.makedirs(checkpoint_dir_epoch)
             save_model(args, model, checkpoint_dir_epoch)
             print('Checkpoint saved at:', checkpoint_dir_epoch)
+        
+        mean_loss=np.mean(train_losses)
 
-        # if epoch % args.eval_per_epoch == 0:
-        #     eval_logs = evaluate_on_env(args, env_settings=eval_env_settings, model=model, target_return=target_return, max_ep_num=args.trace_num,
-        #                                 process_reward_fn=eval_process_reward_fn)
-        #     episodes_return = eval_logs['episodes_return']
-        #     if best_eval_return < episodes_return:
-        #         best_eval_return = episodes_return
-        #         save_model(args, model, best_model_dir)
-        #         print('Best model saved at:', best_model_dir)
-
-        #     eval_logs['best_return'] = best_eval_return
-        #     print('>' * 10, 'Evaluation Information')
-        #     pprint(eval_logs)
-    # save training losses
+        if min_loss > mean_loss:
+            save_model(args, model, best_model_dir)
+            print('Best model saved at:', best_model_dir)
+    
     train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
+    
 
-    # For Testing:
-    total_train_losses = []
+
+def test(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpoint_dir, best_model_dir, eval_process_reward_fn):
+    optimizer = AdamW(
+        model.parameters(),
+        lr=args.lr,
+        weight_decay=args.weight_decay,
+    )
+    lr_scheduler = LambdaLR(
+        optimizer,
+        lambda steps: min((steps + 1) / args.warmup_steps, 1)
+    )
+    loss_fn = CrossEntropyLoss()
+    tester = Tester(args, model=model, optimizer=optimizer, exp_dataset=exp_dataset, loss_fn=loss_fn, device=args.device, lr_scheduler=lr_scheduler, 
+                      grad_accum_steps=args.grad_accum_steps)
+
+    target_return = exp_dataset_info.max_return * args.target_return_scale
+    best_eval_return = 0.
+
+    total_test_losses = []
     for epoch in range(args.num_epochs):
-        train_logs, train_losses = trainer.train_epoch(epoch)
-        total_train_losses.extend(train_losses)
+        test_logs, test_losses = tester.test_epoch(epoch)
+        total_test_losses.extend(test_losses)
         print('='* 20, f'Testing Iteration #{epoch}', '=' * 20)
         print('>' * 10, 'Testing Information:')
-        pprint(train_logs)
+        pprint(test_logs)
 
         if epoch % args.save_checkpoint_per_epoch == 0:  # save checkpoint
             checkpoint_dir_epoch = os.path.join(checkpoint_dir, str(epoch))
@@ -153,31 +167,8 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
             save_model(args, model, checkpoint_dir_epoch)
             print('Checkpoint saved at:', checkpoint_dir_epoch)
 
-        # if epoch % args.eval_per_epoch == 0:
-        #     eval_logs = evaluate_on_env(args, env_settings=eval_env_settings, model=model, target_return=target_return, max_ep_num=args.trace_num,
-        #                                 process_reward_fn=eval_process_reward_fn)
-        #     episodes_return = eval_logs['episodes_return']
-        #     if best_eval_return < episodes_return:
-        #         best_eval_return = episodes_return
-        #         save_model(args, model, best_model_dir)
-        #         print('Best model saved at:', best_model_dir)
-
-        #     eval_logs['best_return'] = best_eval_return
-        #     print('>' * 10, 'Evaluation Information')
-        #     pprint(eval_logs)
-    # save training losses
-    train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
-    np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
-
-
-def test(args, model, exp_dataset_info, env_settings, model_dir, result_dir, test_process_reward_fn):
-    model = load_model(args, model, model_dir)
-    print('Load model from:', model_dir)
-    target_return = exp_dataset_info.max_return * args.target_return_scale
-    results = test_on_env(args, model, result_dir, env_settings, target_return, args.trace_num, test_process_reward_fn, seed=args.seed)
-    print(results)
-    print('Test time:', results['time'], '\nMean reward:', results['mean_reward'])
-    print('Results saved at:', result_dir)
+    test_losses_path = os.path.join(checkpoint_dir, 'test_losses.txt')
+    np.savetxt(test_losses_path, total_test_losses, fmt='%.6f', delimiter='\n')
 
 
 def run(args):
@@ -277,11 +268,16 @@ def run(args):
         sys.stdout = ConsoleLogger(sys.__stdout__, console_log)
         adapt(args, rl_policy, exp_dataset, exp_dataset_info, env_settings, checkpoint_dir, best_model_dir, process_reward)
     if args.test:
+        if not os.path.exists(checkpoint_dir):
+            os.makedirs(checkpoint_dir)
+        console_log = open(os.path.join(models_dir, f'early_stop_{args.which_layer}_console.log'), 'w')
+        sys.stdout = ConsoleLogger(sys.__stdout__, console_log)
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
         model_dir = args.model_dir if args.model_dir is not None else best_model_dir
         assert os.path.exists(model_dir), f'Model weight dir {model_dir} does not exist.'
-        test(args, rl_policy, exp_dataset_info, env_settings, model_dir, results_dir, process_reward)
+        test(args, rl_policy, exp_dataset, exp_dataset_info, env_settings, checkpoint_dir, best_model_dir, process_reward)
+    
 
 
 if __name__ == '__main__':

@@ -42,7 +42,7 @@ class Trainer:
 
         self.model.train()
         for step, batch in enumerate(self.dataloader):
-            train_loss, accuracy, states, actions, returns, timesteps, labels, actions_pred1 = self.train_step(batch,epoch,step)
+            train_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = self.train_step(batch,epoch,step)
             train_losses.append(train_loss.item())
             
             # CPU and RAM usage
@@ -74,7 +74,7 @@ class Trainer:
                 'step': step,
                 'train_loss': train_loss.item(),
                 'actions_pred1': self.tensor_to_list(actions_pred1),
-                'accuracy': accuracy,
+                'actions_pred': self.tensor_to_list(actions_pred),
                 'states': self.tensor_to_list(states),
                 'actions': self.tensor_to_list(actions),
                 'returns': self.tensor_to_list(returns),
@@ -98,7 +98,7 @@ class Trainer:
         logs['training/train_loss_std'] = np.std(train_losses)
         
         # Save custom logs to a JSON file for this epoch
-        with open(f'custom_logs_epoch_{epoch}.json', 'w') as file:
+        with open(f'custom_logs_epoch_train_{epoch}.json', 'w') as file:
             json.dump(custom_logs, file, indent=4)
 
         return logs, train_losses
@@ -108,11 +108,4 @@ class Trainer:
         actions_pred1 = self.model(states, actions, returns, timesteps)
         actions_pred = actions_pred1.permute(0, 2, 1)
         loss = self.loss_fn(actions_pred, labels) 
-
-        # Calculate accuracy
-        _, predicted = torch.max(actions_pred, dim=1)  # Assuming actions_pred is of shape (batch_size, num_classes, seq_len)
-        correct = (predicted == labels).sum().item()
-        accuracy = correct / labels.numel()  # Assuming labels are of shape (batch_size, seq_len)
-
-        return loss, accuracy, states, actions, returns, timesteps, labels, actions_pred1
-
+        return loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred
