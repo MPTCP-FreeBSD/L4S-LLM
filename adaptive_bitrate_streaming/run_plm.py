@@ -160,12 +160,12 @@ def test(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpoi
         print('>' * 10, 'Testing Information:')
         pprint(test_logs)
 
-        if epoch % args.save_checkpoint_per_epoch == 0:  # save checkpoint
-            checkpoint_dir_epoch = os.path.join(checkpoint_dir, str(epoch))
-            if not os.path.exists(checkpoint_dir_epoch):
-                os.makedirs(checkpoint_dir_epoch)
-            save_model(args, model, checkpoint_dir_epoch)
-            print('Checkpoint saved at:', checkpoint_dir_epoch)
+        # if epoch % args.save_checkpoint_per_epoch == 0:  # save checkpoint
+        #     checkpoint_dir_epoch = os.path.join(checkpoint_dir, str(epoch))
+        #     if not os.path.exists(checkpoint_dir_epoch):
+        #         os.makedirs(checkpoint_dir_epoch)
+        #     save_model(args, model, checkpoint_dir_epoch)
+        #     print('Checkpoint saved at:', checkpoint_dir_epoch)
 
     test_losses_path = os.path.join(checkpoint_dir, 'test_losses.txt')
     np.savetxt(test_losses_path, total_test_losses, fmt='%.6f', delimiter='\n')

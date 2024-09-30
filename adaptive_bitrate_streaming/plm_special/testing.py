@@ -40,7 +40,7 @@ class Tester:
         test_start = time.time()
         dataset_size = len(self.dataloader)
         for step, batch in enumerate(self.dataloader):
-            test_loss, accuracy, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = self.test_step(batch,epoch,step)
+            test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = self.test_step(batch,epoch,step)
             test_losses.append(test_loss.item())
             
             # CPU and RAM usage
@@ -72,7 +72,7 @@ class Tester:
                 'step': step,
                 'test_loss': test_loss.item(),
                 'actions_pred1': self.tensor_to_list(actions_pred1),
-                'accuracy': accuracy,
+                'actions_pred': self.tensor_to_list(actions_pred),
                 'states': self.tensor_to_list(states),
                 'actions': self.tensor_to_list(actions),
                 'returns': self.tensor_to_list(returns),
@@ -106,11 +106,4 @@ class Tester:
         actions_pred1 = self.model(states, actions, returns, timesteps)
         actions_pred = actions_pred1.permute(0, 2, 1)
         loss = self.loss_fn(actions_pred, labels) 
-
-        # Calculate accuracy
-        _, predicted = torch.max(actions_pred, dim=1)  # Assuming actions_pred is of shape (batch_size, num_classes, seq_len)
-        correct = (predicted == labels).sum().item()
-        accuracy = correct / labels.numel()  # Assuming labels are of shape (batch_size, seq_len)
-
-        return loss, accuracy, states, actions, returns, timesteps, labels, actions_pred1, actions_pred
-
+        return loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred
