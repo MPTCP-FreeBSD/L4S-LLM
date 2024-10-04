@@ -52,4 +52,5 @@ def peft_model(plm, plm_type, rank, print_trainable=False, task_type=TaskType.FE
     model.from_pretrained
     if print_trainable:
         print_trainable_parameters(model)
+    print_trainable_parameters(model)
     return model

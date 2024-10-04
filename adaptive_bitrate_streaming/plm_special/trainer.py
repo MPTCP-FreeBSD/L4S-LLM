@@ -51,8 +51,11 @@ class Trainer:
 
             # GPU usage
             gpus = GPUtil.getGPUs()
-            gpu_usage = gpus[0].load * 100 if gpus else 0
-            vram_usage = gpus[0].memoryUsed if gpus else 0
+            gpu_usage1 = gpus[0].load * 100 if gpus else 0
+            vram_usage1 = gpus[0].memoryUsed if gpus else 0
+
+            gpu_usage2 = gpus[1].load * 100 if gpus else 0
+            vram_usage2 = gpus[1].memoryUsed if gpus else 0
 
             # Disk I/O stats
             current_disk_io = psutil.disk_io_counters()
@@ -78,12 +81,15 @@ class Trainer:
                 'states': self.tensor_to_list(states),
                 'actions': self.tensor_to_list(actions),
                 'returns': self.tensor_to_list(returns),
+                'timestamps': str(time.time()),
                 'timesteps': self.tensor_to_list(timesteps),
                 'labels': self.tensor_to_list(labels),
                 'CPU Usage': cpu_usage,
                 'RAM Usage': memory_info.percent,
-                'GPU Usage': gpu_usage,
-                'VRAM Usage': vram_usage,
+                'GPU1 Usage': gpu_usage1,
+                'VRAM1 Usage': vram_usage1,
+                'GPU2 Usage': gpu_usage2,
+                'VRAM2 Usage': vram_usage2,
                 'Disk Read Speed (MB/s)': disk_read_speed,
                 'Disk Write Speed (MB/s)': disk_write_speed,
             }
