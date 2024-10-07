@@ -202,8 +202,19 @@ def run(args):
     }
 
     # 3. create training dataset, fetch info
-    exp_pool = pickle.load(open(args.exp_pool_path, 'rb'))
-    exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=args.w, sample_step=args.sample_step)
+    # exp_pool = pickle.load(open(args.exp_pool_path, 'rb'))
+    exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool.pkl", 'rb'))
+        
+    if args.test:
+        cur_sample_step = 1
+        exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool_l4s_test.pkl", 'rb'))
+        exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=1, sample_step=cur_sample_step)
+        print("cur_sample_step",cur_sample_step)
+    else:
+        cur_sample_step = args.sample_step
+        exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool_l4s_train.pkl", 'rb'))
+        exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=args.w, sample_step=cur_sample_step)
+    
     exp_dataset_info = Munch(exp_dataset.exp_dataset_info)
     print('Experience dataset info:')
     pprint(exp_dataset_info)
@@ -233,6 +244,7 @@ def run(args):
     # 4.3 create rl policy
     plm_embed_size = cfg.plm_embed_sizes[args.plm_type][args.plm_size]
     max_ep_len = exp_dataset_info.max_timestep + 1
+    print("max_ep_len",max_ep_len)
     rl_policy = OfflineRLPolicy(state_feature_dim=args.state_feature_dim, bitrate_levels=BITRATE_LEVELS, state_encoder=state_encoder, plm=plm, plm_embed_size=plm_embed_size, 
                                            max_length=args.w, max_ep_len=max_ep_len, device=args.device, device_out=args.device_out, which_layer=args.which_layer)
 
