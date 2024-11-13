@@ -44,6 +44,7 @@ class Trainer:
         for step, batch in enumerate(self.dataloader):
             train_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = self.train_step(batch,epoch,step)
             train_losses.append(train_loss.item())
+            time_start_step = time.time()
             
             # CPU and RAM usage
             cpu_usage = psutil.cpu_percent()
@@ -82,6 +83,7 @@ class Trainer:
                 'actions': self.tensor_to_list(actions),
                 'returns': self.tensor_to_list(returns),
                 'timestamps': str(time.time()),
+                'timestamps_each_step': str(time.time() - time_start_step),
                 'timesteps': self.tensor_to_list(timesteps),
                 'labels': self.tensor_to_list(labels),
                 'CPU Usage': cpu_usage,

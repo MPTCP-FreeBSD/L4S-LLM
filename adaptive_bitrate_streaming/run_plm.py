@@ -202,8 +202,19 @@ def run(args):
     }
 
     # 3. create training dataset, fetch info
-    exp_pool = pickle.load(open(args.exp_pool_path, 'rb'))
-    exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=args.w, sample_step=args.sample_step)
+    # exp_pool = pickle.load(open(args.exp_pool_path, 'rb'))
+    exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool.pkl", 'rb'))
+        
+    if args.test:
+        cur_sample_step = 1
+        exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool_l4s_test.pkl", 'rb'))
+        exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=1, sample_step=cur_sample_step)
+        print("cur_sample_step",cur_sample_step)
+    else:
+        cur_sample_step = args.sample_step
+        exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool_l4s_train.pkl", 'rb'))
+        exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=args.w, sample_step=cur_sample_step)
+    
     exp_dataset_info = Munch(exp_dataset.exp_dataset_info)
     print('Experience dataset info:')
     pprint(exp_dataset_info)
