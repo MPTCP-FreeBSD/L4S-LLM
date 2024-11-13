@@ -1,0 +1,55 @@
+conda create -n abr_netllm python==3.8.10
+
+pip install torch==2.1.0
+
+pip install transformers==4.34.1
+
+(Optional)pip install numpy==1.24.4
+
+pip install munch==4.0.0
+
+pip install openprompt==1.0.1
+
+pip install peft==0.6.2
+
+conda remove -n abr_netllm --all
+
+
+
+huggingface-cli login
+
+huggingface-cli download meta-llama/Llama-2-7b-hf --cache-dir ../downloaded_plms/llama/base
+
+huggingface-cli download meta-llama/Llama-2-7b-hf --local-dir ../downloaded_plms/llama/base
+
+huggingface-cli download meta-llama/Llama-2-7b-hf --cache-dir ../downloaded_plms/llama2/base
+
+huggingface-cli download meta-llama/Llama-2-7b-hf --local-dir ../downloaded_plms/llama2/base
+
+pip install torch==2.1.0+cu118 torchvision==0.15.2+cu118 torchaudio==2.0.2+cu118 -f https://download.pytorch.org/whl/cu118/torch_stable.html
+
+
+
+
+
+conda install pytorch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 pytorch-cuda=11.8 -c pytorch -c nvidia
+
+conda install conda-forge::transformers==4.34.1
+
+conda install conda-forge::munch
+
+pip install openprompt==1.0.1
+
+conda install conda-forge::peft==0.6.2
+
+conda install conda-forge::huggingface_hub==0.17.3
+
+conda install conda-forge::accelerate==0.24.1
+
+conda install conda-forge::scikit-learn==1.3.2
+
+conda install conda-forge::huggingface_hub==0.19.1
+
+ | noarch/huggingface_hub-0.19.1-pyhd8ed1ab_0.conda
+
+ noarch/huggingface_hub-0.18.0-pyhd8ed1ab_0.conda

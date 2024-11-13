@@ -8,6 +8,4 @@ downloaded_plms
 ft_plms
 Setup Info and Data/LLM Data Processing/llmrawdata.txt
 Setup Info and Data/LLM Data Processing/lmprocesseddata.txt
-Log Viz/logs_folder
-Log Viz/test_log_data
-Log Viz/train_log_data
+Log Viz

@@ -128,7 +128,16 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
 
         if min_loss > mean_loss:
             save_model(args, model, best_model_dir)
+            print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
+            print("Epoch Index of Best Model:", epoch)
             print('Best model saved at:', best_model_dir)
+            # Open a file in write mode
+            with open("best_model.txt", "a") as file:
+                # Write the number to the file
+                file.write("---------------------------------")
+                file.write(str(epoch))
+                file.write("---------------------------------\n")
+            print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
     
     train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
@@ -244,7 +253,6 @@ def run(args):
     # 4.3 create rl policy
     plm_embed_size = cfg.plm_embed_sizes[args.plm_type][args.plm_size]
     max_ep_len = exp_dataset_info.max_timestep + 1
-    print("max_ep_len",max_ep_len)
     rl_policy = OfflineRLPolicy(state_feature_dim=args.state_feature_dim, bitrate_levels=BITRATE_LEVELS, state_encoder=state_encoder, plm=plm, plm_embed_size=plm_embed_size, 
                                            max_length=args.w, max_ep_len=max_ep_len, device=args.device, device_out=args.device_out, which_layer=args.which_layer)
 
