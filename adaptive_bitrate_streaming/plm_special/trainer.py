@@ -70,7 +70,6 @@ class Trainer:
                 if self.lr_scheduler is not None:
                     self.lr_scheduler.step()
             print(f'Step {step} - train_loss.item() {train_loss.item()}')
-            
             # Log step information
             step_logs = {
                 'step': step,

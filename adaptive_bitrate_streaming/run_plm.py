@@ -15,9 +15,9 @@ from config import cfg
 from baseline_special.utils.utils import load_traces
 from baseline_special.utils.constants import BITRATE_LEVELS
 from plm_special.trainer import Trainer
-from plm_special.testing import Tester
 from plm_special.evaluate import evaluate_on_env
 from plm_special.test import test_on_env
+from plm_special.testing import ntesting
 from plm_special.data.dataset import ExperienceDataset
 from plm_special.models.rl_policy import OfflineRLPolicy
 from plm_special.models.state_encoder import EncoderNetwork
@@ -26,6 +26,7 @@ from plm_special.utils.utils import set_random_seed
 from plm_special.utils.plm_utils import load_plm
 from plm_special.utils.console_logger import ConsoleLogger
 
+global exp_pool_path
 
 class ExperiencePool:
     """
@@ -45,6 +46,7 @@ class ExperiencePool:
 
     def __len__(self):
         return len(self.states)
+
 
 
 
@@ -79,6 +81,7 @@ def save_model(args, model, save_dir):
 
 
 def load_model(args, model, model_dir):
+    print("args.rank",args.rank)
     if args.rank > 0:
         # load lora weights
         model.plm.load_adapter(model_dir, adapter_name='default')
@@ -141,43 +144,12 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
     
     train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
-    
+    exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_test.pkl"
+    exp_pool = pickle.load(open(exp_pool_path, 'rb'))
+    logs, test_lossess = ntesting(args, model, exp_pool , loss_fn, batch_size=1)
 
 
-def test(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpoint_dir, best_model_dir, eval_process_reward_fn):
-    optimizer = AdamW(
-        model.parameters(),
-        lr=args.lr,
-        weight_decay=args.weight_decay,
-    )
-    lr_scheduler = LambdaLR(
-        optimizer,
-        lambda steps: min((steps + 1) / args.warmup_steps, 1)
-    )
-    loss_fn = CrossEntropyLoss()
-    tester = Tester(args, model=model, optimizer=optimizer, exp_dataset=exp_dataset, loss_fn=loss_fn, device=args.device, lr_scheduler=lr_scheduler, 
-                      grad_accum_steps=args.grad_accum_steps)
 
-    target_return = exp_dataset_info.max_return * args.target_return_scale
-    best_eval_return = 0.
-
-    total_test_losses = []
-    for epoch in range(args.num_epochs):
-        test_logs, test_losses = tester.test_epoch(epoch)
-        total_test_losses.extend(test_losses)
-        print('='* 20, f'Testing Iteration #{epoch}', '=' * 20)
-        print('>' * 10, 'Testing Information:')
-        pprint(test_logs)
-
-        # if epoch % args.save_checkpoint_per_epoch == 0:  # save checkpoint
-        #     checkpoint_dir_epoch = os.path.join(checkpoint_dir, str(epoch))
-        #     if not os.path.exists(checkpoint_dir_epoch):
-        #         os.makedirs(checkpoint_dir_epoch)
-        #     save_model(args, model, checkpoint_dir_epoch)
-        #     print('Checkpoint saved at:', checkpoint_dir_epoch)
-
-    test_losses_path = os.path.join(checkpoint_dir, 'test_losses.txt')
-    np.savetxt(test_losses_path, total_test_losses, fmt='%.6f', delimiter='\n')
 
 
 def run(args):
@@ -210,20 +182,19 @@ def run(args):
         'trace_num': args.trace_num,
     }
 
-    # 3. create training dataset, fetch info
-    # exp_pool = pickle.load(open(args.exp_pool_path, 'rb'))
-    exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool.pkl", 'rb'))
-        
+    exp_pool_path = "Nothing Empty"
+
+    if args.adapt:
+        exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train.pkl"
+
     if args.test:
-        cur_sample_step = 1
-        exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool_l4s_test.pkl", 'rb'))
-        exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=1, sample_step=cur_sample_step)
-        print("cur_sample_step",cur_sample_step)
-    else:
-        cur_sample_step = args.sample_step
-        exp_pool = pickle.load(open("./artifacts/exp_pools/exp_pool_l4s_train.pkl", 'rb'))
-        exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=args.w, sample_step=cur_sample_step)
-    
+        exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_test.pkl"
+
+
+    # 3. create training dataset, fetch info
+    print("exp_pool_path",exp_pool_path)
+    exp_pool = pickle.load(open(exp_pool_path, 'rb'))
+    exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=args.w, sample_step=args.sample_step)
     exp_dataset_info = Munch(exp_dataset.exp_dataset_info)
     print('Experience dataset info:')
     pprint(exp_dataset_info)
@@ -288,16 +259,18 @@ def run(args):
         sys.stdout = ConsoleLogger(sys.__stdout__, console_log)
         adapt(args, rl_policy, exp_dataset, exp_dataset_info, env_settings, checkpoint_dir, best_model_dir, process_reward)
     if args.test:
-        if not os.path.exists(checkpoint_dir):
-            os.makedirs(checkpoint_dir)
-        console_log = open(os.path.join(models_dir, f'early_stop_{args.which_layer}_console.log'), 'w')
-        sys.stdout = ConsoleLogger(sys.__stdout__, console_log)
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
         model_dir = args.model_dir if args.model_dir is not None else best_model_dir
         assert os.path.exists(model_dir), f'Model weight dir {model_dir} does not exist.'
-        test(args, rl_policy, exp_dataset, exp_dataset_info, env_settings, checkpoint_dir, best_model_dir, process_reward)
-    
+        print("-------------------------------------------------------")
+        print("model_dir:",model_dir)
+        print("best_model_dir:",best_model_dir)
+        print('Load model from:', model_dir)
+        model = load_model(args, rl_policy, model_dir)
+        target_return = exp_dataset_info.max_return * args.target_return_scale
+        loss_fn = CrossEntropyLoss()
+        logs, test_lossess = ntesting(args, model, loss_fn, batch_size=1)
 
 
 if __name__ == '__main__':
