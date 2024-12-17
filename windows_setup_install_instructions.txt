@@ -106,3 +106,6 @@ python run_plm.py --adapt --grad-accum-steps 32 --plm-type mistral --plm-size ba
 
 #To tun t5-lm
 python run_plm.py --adapt --grad-accum-steps 32 --plm-type t5-lm --plm-size base --rank -1 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+
+

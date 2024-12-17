@@ -1,0 +1,9 @@
+# TO install screen
+apt update
+apt install screen
+
+
+create new screen :screen -S screen1 
+list all screens:screen -ls
+repoen existing screen:screen -r screen1
+ # to close screen in background: Use First ctrl+a then ctrl+d basically press ctrl then go from a to d
