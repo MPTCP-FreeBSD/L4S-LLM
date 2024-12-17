@@ -26,9 +26,6 @@ conda install conda-forge::scikit-learn==1.3.2
 
 conda install conda-forge::huggingface_hub==0.19.1
 
- | noarch/huggingface_hub-0.19.1-pyhd8ed1ab_0.conda
-
- noarch/huggingface_hub-0.18.0-pyhd8ed1ab_0.conda
 
 
 
@@ -55,3 +52,57 @@ huggingface-cli login
 
 huggingface-cli download meta-llama/Llama-2-7b-hf --local-dir ../downloaded_plms/llama/base
 
+
+huggingface-cli download meta-llama/Llama-2-7b-hf --local-dir ../downloaded_plms/llama/base
+
+
+huggingface-cli download facebook/opt-1.3b --local-dir ../downloaded_plms/opt/base
+
+huggingface-cli download mistralai/Mistral-7B-v0.1 --local-dir ../downloaded_plms/mistral/base
+huggingface-cli download mistralai/Mistral-7B-v0.3 --local-dir ../downloaded_plms/mistral3/base
+
+huggingface-cli download mistralai/Mixtral-8x7B-v0.1 --local-dir ../downloaded_plms/mistral8-7v-0.1/base
+
+transformers-cli download meta-llama/Llama-2-7b-hf --cache-dir /path/to/model_cache
+
+
+
+llava-hf/llava-1.5-7b-hf
+
+huggingface-cli download llava-hf/llava-1.5-7b-hf --local-dir ../downloaded_plms/llava/base
+
+openai-community/gpt2
+
+huggingface-cli download openai-community/gpt2 --local-dir ../downloaded_plms/gpt2/base
+
+
+
+
+huggingface-cli download google-t5/t5-base --local-dir ../downloaded_plms/t5-lm/base
+
+
+conda activate llmenv;cd C:\Users\User\Documents\GitHub\L4S-LLM
+
+
+# To run opt: # WOrking
+python run_plm.py --adapt --grad-accum-steps 32 --plm-type opt --plm-size xs --rank 128 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+#To run gpt2
+python run_plm.py --adapt --grad-accum-steps 32 --plm-type gpt2 --plm-size base --rank 128 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+# WOrking
+python run_plm.py --adapt --grad-accum-steps 32 --plm-type gpt2 --plm-size small --rank -1 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+
+python run_plm.py --adapt --grad-accum-steps 32 --plm-type gpt2 --plm-size small --rank 128 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+
+
+# To run llava - Not Working
+python run_plm.py --adapt --grad-accum-steps 32 --plm-type llava --plm-size base --rank -1 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+# To tun Mistral
+python run_plm.py --adapt --grad-accum-steps 32 --plm-type mistral --plm-size base --rank -1 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+#To tun t5-lm
+python run_plm.py --adapt --grad-accum-steps 32 --plm-type t5-lm --plm-size base --rank -1 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
