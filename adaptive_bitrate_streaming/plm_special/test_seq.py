@@ -207,9 +207,11 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     df =  convert_exp_pool_to_dataframe(exp_pool)
     # print(df.columns)
     # print(df.shape)
-    # print(df.iloc[0])
-    # print(df.describe())
-    # print(df.head(50))
+    print(df.describe())
+    # print(df.head(5))
+    # print("**"*10)
+    # print(df.tail(5))
+    print("*-*-"*80)
 
     max_ep_num = 100
     max_ep_len = 100
@@ -223,26 +225,35 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         start_iloc+=1
         row = df.iloc[start_iloc]
         
-        print("-" * 40)
+        print("--" * 40)
         state = np.array(row[state_columns], dtype=np.float32)
         current_action = row['actions']
         reward=row['rewards']
         done=0
         batch = [state],[current_action],[reward],[done]
-        print("batch",batch)
+        # print("batch",batch)
         test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch)
         test_losses.append(test_loss.item())
 
         print("actions_pred",actions_pred)
-        print("actions_pred.shape",actions_pred.shape)
+        # print("actions_pred.shape",actions_pred.shape)
 
         new_action = actions_pred.detach().cpu().numpy().argmax(axis=1).flatten()
-        print("new_action",new_action)
+        
+        # print("new_action",new_action)
+        # print("type(new_action)",type(new_action))
+
+        # print("new_action",new_action.astype(int))
+        # print("type(new_action)",type(new_action.astype(int)))
+
+
+        print("new_action",new_action.item())
+        print("type(new_action)",type(new_action.item()))
 
         df_qt= df[df['state_0']== int(states[0][0][0])]
         
         df_ats= df_qt[df_qt['actions']== int(new_action)]
-        print(df_ats.head(10))
+        print(df_ats.head(3))
 
         if df_ats.empty:
             print("df_ats is empty, skipping this batch.")
@@ -256,6 +267,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
 
         # Next start datapoint of episode will be the nearest datapoint,
         # we can find from the database
+        print("datapoint_idx",datapoint_idx)
         start_iloc = datapoint_idx
 
         # CPU and RAM usage

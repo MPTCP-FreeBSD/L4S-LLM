@@ -49,12 +49,16 @@ class OfflineRLPolicy(nn.Module):
         self.embed_state3 = nn.Linear(state_feature_dim, plm_embed_size).to(device)    
         self.embed_state4 = nn.Linear(state_feature_dim, plm_embed_size).to(device)    
         self.embed_state5 = nn.Linear(state_feature_dim, plm_embed_size).to(device)
-        self.embed_state6 = nn.Linear(state_feature_dim, plm_embed_size).to(device)    
+        self.embed_state6 = nn.Linear(state_feature_dim, plm_embed_size).to(device)
+        self.embed_state7 = nn.Linear(state_feature_dim, plm_embed_size).to(device)
+        self.embed_state8 = nn.Linear(state_feature_dim, plm_embed_size).to(device)    
 
         self.embed_ln = nn.LayerNorm(plm_embed_size).to(device)
         # =========== multimodal encoder (end) ===========
     
         self.action_head = nn.Linear(plm_embed_size, bitrate_levels).to(device)  # the so-called L4S head in our paper
+
+        print("rl_policy: bitrate_levels",bitrate_levels)
 
         self.device = device
         self.device_out = device_out
@@ -69,7 +73,7 @@ class OfflineRLPolicy(nn.Module):
         self.modules_except_plm = nn.ModuleList([  # used to save and load modules except plm
             self.state_encoder, self.embed_timestep, self.embed_return, self.embed_action, self.embed_ln, 
             self.embed_state1, self.embed_state2, self.embed_state3, self.embed_state4, self.embed_state5,
-            self.embed_state6, self.action_head
+            self.embed_state6,self.embed_state7,self.embed_state8, self.action_head
         ])
 
     def forward(self, states, actions, returns, timesteps, attention_mask=None):
@@ -101,6 +105,8 @@ class OfflineRLPolicy(nn.Module):
         states_embeddings4 = self.embed_state4(states_features[3]) + time_embeddings
         states_embeddings5 = self.embed_state5(states_features[4]) + time_embeddings
         states_embeddings6 = self.embed_state6(states_features[5]) + time_embeddings
+        states_embeddings7 = self.embed_state6(states_features[6]) + time_embeddings
+        states_embeddings8 = self.embed_state6(states_features[7]) + time_embeddings
         
         # Step 3: stack returns, states, actions embeddings.
         # this makes the sequence look like (R_1, s_1-1, s_1-2, ..., s_1-n, a_1, R_2, s_2-1, ..., s_2-m, a_2, ...)
@@ -110,9 +116,9 @@ class OfflineRLPolicy(nn.Module):
         for i in range(returns_embeddings.shape[1]):
             stacked_input = torch.cat((returns_embeddings[0, i:i + 1], states_embeddings1[0, i:i + 1], states_embeddings2[0, i:i + 1], 
                                        states_embeddings3[0, i:i + 1], states_embeddings4[0, i:i + 1], states_embeddings5[0, i:i + 1], 
-                                       states_embeddings6[0, i:i + 1], action_embeddings[0, i:i + 1]), dim=0)
+                                       states_embeddings6[0, i:i + 1], states_embeddings7[0, i:i + 1],states_embeddings8[0, i:i + 1], action_embeddings[0, i:i + 1]), dim=0)
             stacked_inputs.append(stacked_input)
-            action_embed_positions[i] = (i + 1) * (2 + 6)
+            action_embed_positions[i] = (i + 1) * (2 + 8)
         stacked_inputs = torch.cat(stacked_inputs, dim=0).unsqueeze(0)
         stacked_inputs = stacked_inputs[:, -self.plm_embed_size:, :]  # truncate sequence length (should not exceed plm embed size)
         stacked_inputs_ln = self.embed_ln(stacked_inputs)  # layer normalization
@@ -173,8 +179,10 @@ class OfflineRLPolicy(nn.Module):
         state_embeddings4 = self.embed_state4(state_features[3]) + time_embeddings
         state_embeddings5 = self.embed_state5(state_features[4]) + time_embeddings
         state_embeddings6 = self.embed_state6(state_features[5]) + time_embeddings
+        state_embeddings7 = self.embed_state6(state_features[6]) + time_embeddings
+        state_embeddings8 = self.embed_state6(state_features[7]) + time_embeddings
         state_embeddings = torch.cat([state_embeddings1, state_embeddings2, state_embeddings3, state_embeddings4,
-                                      state_embeddings5, state_embeddings6], dim=1)
+                                      state_embeddings5, state_embeddings6,state_embeddings7,state_embeddings8], dim=1)
 
 
         # Step 5: stack return, stage and previous embeddings
