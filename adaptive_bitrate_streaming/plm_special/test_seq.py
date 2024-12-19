@@ -211,7 +211,9 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         cur_datapoint_idx = find_nearest_length(df_ats, float(states[0][0][6]))
         print("datapoint",cur_datapoint_idx)
         if ep_index % 25 == 0:
-             start_iloc = cur_datapoint_idx
+            start_iloc = cur_datapoint_idx
+        else:
+             start_iloc+=1
 
         # Next start datapoint of episode will be the nearest datapoint,
         # we can find from the database
@@ -267,6 +269,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
             'timesteps': tensor_to_list(timesteps),
             'labels': tensor_to_list(labels)
         }
+        start_iloc+=1
         custom_logs['steps'].append(step_logs)
     # Save custom logs to a JSON file for this epoch
     with open(f'./Logs/eval_logs_original.json', 'w') as file:
