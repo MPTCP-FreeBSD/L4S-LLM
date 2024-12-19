@@ -96,8 +96,8 @@ def convert_exp_pool_to_dataframe(exp_pool, csv_output_path='exp_pool_data.csv',
     df['dones'] = exp_pool.dones
 
     # Step 2: Save the DataFrame to a CSV file
-    df.to_csv(csv_output_path, index=False)
-    print(f"DataFrame saved successfully to: {csv_output_path}")
+    # df.to_csv(csv_output_path, index=False)
+    # print(f"DataFrame saved successfully to: {csv_output_path}")
 
     # # Step 3: (Optional) Save the experience pool as a dictionary in a pickle file
     # exp_pool_dict = {
@@ -117,21 +117,80 @@ def convert_exp_pool_to_dataframe(exp_pool, csv_output_path='exp_pool_data.csv',
 
 
 def find_nearest_length(df, user_input):
+    print("||||||||||||||||"*40)
+    print("df in function find_nearest_length")
     if df.empty:
         # Handle the empty DataFrame case
         print("DataFrame is empty, returning None.")
         return None  # Return None or another suitable default value
 
     # Calculate the absolute difference with user input
-    nearest_idx = (df['state_6'] - user_input).abs().idxmin()
-    print("nearest_idx",nearest_idx)
+    print("user_input",user_input)
+    # nearest_idx = (df['state_6'] - user_input).abs().idxmin()
     
-    if nearest_idx is None or nearest_idx >= len(df):
+    # df_sort = df.iloc[(df['state_6']-user_input).abs().argsort()[:1]]
+    # nearest_idx = (df['state_6']-user_input).abs().argsort()[:1]
+    # print("df_sort",df_sort.head(2))
+    # print("11nearest_idx",nearest_idx)
+
+
+    nearest_idx = (df['state_6'] - user_input).abs().idxmin()
+    print("22nearest_idx",nearest_idx)
+
+    
+
+    if nearest_idx >= len(df):
+        print("Outside df_ats limits")
+    
+    if nearest_idx is None:
         print("No valid index found, returning None.")
         return None  # Return None or another suitable default value
     
+    print("||||||||||||||||"*40)
 
     return nearest_idx
+
+# def find_nearest_length(df, user_input):
+#     print("()" * 40)
+#     print("df in function find_nearest_length:")
+    
+    
+#     if df.empty:
+#         # Handle the empty DataFrame case
+#         print("DataFrame is empty, returning None.")
+#         return None  # Return None or another suitable default value
+
+#     # Ensure 'state_6' column exists and is numeric
+#     if 'state_6' not in df.columns:
+#         print("'state_6' column not found in DataFrame, returning None.")
+#         return None
+    
+#     try:
+#         df['state_6'] = pd.to_numeric(df['state_6'], errors='coerce')
+#     except Exception as e:
+#         print(f"Error converting 'state_6' column to numeric: {e}")
+#         return None
+
+#     if df['state_6'].isnull().all():
+#         print("All values in 'state_6' are NaN, returning None.")
+#         return None
+    
+#     # Calculate the absolute difference with user_input
+#     print("user_input:", user_input)
+#     try:
+#         nearest_idx = (df['state_6'] - user_input).abs().idxmin()
+#         print("nearest_idx:", nearest_idx)
+#     except Exception as e:
+#         print(f"Error finding nearest index: {e}")
+#         return None
+
+#     # Ensure the index is valid
+#     if nearest_idx is None or nearest_idx not in df.index:
+#         print("No valid index found, returning None.")
+#         return None
+
+#     return nearest_idx
+
 
 
 
@@ -211,19 +270,25 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     # print(df.head(5))
     # print("**"*10)
     # print(df.tail(5))
-    print("*-*-"*80)
+    # print("*-*-"*80)
+    # df.to_csv("first_save.csv")
 
-    max_ep_num = 100
     max_ep_len = 100
     start_iloc=0
     row = df.iloc[start_iloc]
     test_start = time.time()
+    datapoint_idx = 0
 
     state_columns = [f'state_{i}' for i in range(len(exp_pool.states[0]))]
 
     for ep_index in range(max_ep_len):
+        # df.to_csv("second_save.csv")
         start_iloc+=1
-        row = df.iloc[start_iloc]
+        
+        # row = df.iloc[start_iloc]
+
+        row = df.iloc[datapoint_idx]
+        print("row,",row)
         
         print("--" * 40)
         state = np.array(row[state_columns], dtype=np.float32)
@@ -235,7 +300,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch)
         test_losses.append(test_loss.item())
 
-        print("actions_pred",actions_pred)
+        # print("actions_pred",actions_pred)
         # print("actions_pred.shape",actions_pred.shape)
 
         new_action = actions_pred.detach().cpu().numpy().argmax(axis=1).flatten()
@@ -247,18 +312,20 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         # print("type(new_action)",type(new_action.astype(int)))
 
 
-        print("new_action",new_action.item())
-        print("type(new_action)",type(new_action.item()))
+        # print("new_action",new_action.item())
+        # print("type(new_action)",type(new_action.item()))
 
         df_qt= df[df['state_0']== int(states[0][0][0])]
         
         df_ats= df_qt[df_qt['actions']== int(new_action)]
-        print(df_ats.head(3))
+        # print("df_ats.head(3)")
+        # print(df_ats.head(3))
+        # print(df_ats.describe())
 
         if df_ats.empty:
             print("df_ats is empty, skipping this batch.")
-            start_iloc+=1
-            row = df.iloc[start_iloc]
+            # start_iloc+=1
+            # row = df.iloc[start_iloc]
             continue  # Skip to the next iteration of the loop
         print("current_queue_delay",states[0][0][3])
         print("length_in_bytes",states[0][0][6])
@@ -267,7 +334,6 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
 
         # Next start datapoint of episode will be the nearest datapoint,
         # we can find from the database
-        print("datapoint_idx",datapoint_idx)
         start_iloc = datapoint_idx
 
         # CPU and RAM usage

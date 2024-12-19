@@ -187,6 +187,7 @@ def run(args):
 
     if args.adapt:
         exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train_min.pkl"
+        exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train.pkl"
 
     if args.test:
         exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_test.pkl"
