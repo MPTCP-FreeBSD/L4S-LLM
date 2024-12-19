@@ -233,7 +233,43 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         }
         custom_logs['steps'].append(step_logs)
     # Save custom logs to a JSON file for this epoch
-    with open(f'./Logs/ custom_logs_epoch_testseq_1.json', 'w') as file:
+    with open(f'./Logs/eval_logs_llm.json', 'w') as file:
+        json.dump(custom_logs, file, indent=4)
+
+ # To Save Original Sequence
+    for ep_index in range(max_ep_len):
+        # df.to_csv("second_save.csv")
+        row = df.iloc[start_iloc]
+        print("row,",row)
+        
+        print("--" * 40)
+        state = np.array(row[state_columns], dtype=np.float32)
+        current_action = row['actions']
+        reward=row['rewards']
+        done=0
+        batch = [state],[current_action],[reward],[done]
+        # print("batch",batch)
+        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch)
+        test_losses.append(test_loss.item())
+
+        print(f'Step {ep_index} - test_loss.item() {test_loss.item()}')
+        
+        # Log step information
+        step_logs = {
+            'step': ep_index,
+            'test_loss': test_loss.item(),
+            'actions_pred1': tensor_to_list(actions_pred1),
+            'actions_pred': tensor_to_list(actions_pred),
+            'states': tensor_to_list(states),
+            'actions': tensor_to_list(actions),
+            'returns': tensor_to_list(returns),
+            'timestamps': str(time.time()),
+            'timesteps': tensor_to_list(timesteps),
+            'labels': tensor_to_list(labels)
+        }
+        custom_logs['steps'].append(step_logs)
+    # Save custom logs to a JSON file for this epoch
+    with open(f'./Logs/eval_logs_original.json', 'w') as file:
         json.dump(custom_logs, file, indent=4)
 
 
