@@ -132,16 +132,16 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
 
         if min_loss > mean_loss:
             save_model(args, model, best_model_dir)
-            print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
-            print("Epoch Index of Best Model:", epoch)
-            print('Best model saved at:', best_model_dir)
-            # Open a file in write mode
-            with open("best_model.txt", "a") as file:
-                # Write the number to the file
-                file.write("---------------------------------")
-                file.write(str(epoch))
-                file.write("---------------------------------\n")
-            print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
+            # print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
+            # print("Epoch Index of Best Model:", epoch)
+            # print('Best model saved at:', best_model_dir)
+            # # # Open a file in write mode
+            # # with open("best_model.txt", "a") as file:
+            # #     # Write the number to the file
+            # #     file.write("---------------------------------")
+            # #     file.write(str(epoch))
+            # #     file.write("---------------------------------\n")
+            # # print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
     
     train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
@@ -187,7 +187,7 @@ def run(args):
 
     if args.adapt:
         exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train_min.pkl"
-        exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train.pkl"
+        # exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train.pkl"
 
     if args.test:
         exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_test.pkl"

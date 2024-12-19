@@ -101,7 +101,7 @@ class Trainer:
         logs['training/train_loss_std'] = np.std(train_losses)
         
         # Save custom logs to a JSON file for this epoch
-        with open(f'custom_logs_epoch_train_{epoch}.json', 'w') as file:
+        with open(f'./Logs/custom_logs_epoch_train_{epoch}.json', 'w') as file:
             json.dump(custom_logs, file, indent=4)
 
         return logs, train_losses

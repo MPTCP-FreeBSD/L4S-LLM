@@ -382,7 +382,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         }
         custom_logs['steps'].append(step_logs)
     # Save custom logs to a JSON file for this epoch
-    with open(f'custom_logs_epoch_testseq_1.json', 'w') as file:
+    with open(f'./Logs/ custom_logs_epoch_testseq_1.json', 'w') as file:
         json.dump(custom_logs, file, indent=4)
 
 
