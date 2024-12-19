@@ -145,7 +145,7 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
     
     train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
-    exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train.pkl"
+    exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_eval.pkl"
     exp_pool = pickle.load(open(exp_pool_path, 'rb'))
     testenvsim(args, model, exp_pool , target_return, loss_fn, eval_process_reward_fn)
 
@@ -187,7 +187,7 @@ def run(args):
 
     if args.adapt:
         exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train_min.pkl"
-        # exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_train.pkl"
+        exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_trainv2.pkl"
 
     if args.test:
         exp_pool_path = "./artifacts/exp_pools/exp_pool_l4s_test.pkl"

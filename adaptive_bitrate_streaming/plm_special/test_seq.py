@@ -48,8 +48,8 @@ def convert_exp_pool_to_dataframe(exp_pool, csv_output_path='exp_pool_data.csv',
     df['dones'] = exp_pool.dones
 
     # Step 2: Save the DataFrame to a CSV file
-    # df.to_csv(csv_output_path, index=False)
-    # print(f"DataFrame saved successfully to: {csv_output_path}")
+    df.to_csv(csv_output_path, index=False)
+    print(f"DataFrame saved successfully to: {csv_output_path}")
     return df
 
 
@@ -143,8 +143,6 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
 
     exp_dataset = ExperienceDataset(exp_pool, gamma=args.gamma, scale=args.scale, max_length=args.w, sample_step=1)
 
-    test_losses = []
-    logs = dict()
     custom_logs = {'steps': []}
 
     df =  convert_exp_pool_to_dataframe(exp_pool)
@@ -157,7 +155,8 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     # print("*-*-"*80)
     # df.to_csv("first_save.csv")
 
-    max_ep_len = 1000
+    max_ep_len = 1600
+    llm_freq = 10
 
     row = df.iloc[0]
     test_start = time.time()
@@ -179,7 +178,6 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         batch = [state],[current_action],[reward],[done]
         # print("batch",batch)
         test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch)
-        test_losses.append(test_loss.item())
 
         # print("actions_pred",actions_pred)
         # print("actions_pred.shape",actions_pred.shape)
@@ -210,10 +208,10 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         print("length_in_bytes",states[0][0][6])
         cur_datapoint_idx = find_nearest_length(df_ats, float(states[0][0][6]))
         print("datapoint",cur_datapoint_idx)
-        if ep_index % 25 == 0:
+        if ep_index % llm_freq == 0:
             start_iloc = cur_datapoint_idx
         else:
-             start_iloc+=1
+            start_iloc+=1
 
         # Next start datapoint of episode will be the nearest datapoint,
         # we can find from the database
@@ -237,10 +235,12 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     # Save custom logs to a JSON file for this epoch
     with open(f'./Logs/eval_logs_llm.json', 'w') as file:
         json.dump(custom_logs, file, indent=4)
-
+    start_iloc = 0
+    custom_logs = {'steps': []}
  # To Save Original Sequence
     for ep_index in range(max_ep_len):
         # df.to_csv("second_save.csv")
+        print("start_iloc",start_iloc)
         row = df.iloc[start_iloc]
         print("row,",row)
         
@@ -252,7 +252,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         batch = [state],[current_action],[reward],[done]
         # print("batch",batch)
         test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch)
-        test_losses.append(test_loss.item())
+
 
         print(f'Step {ep_index} - test_loss.item() {test_loss.item()}')
         
