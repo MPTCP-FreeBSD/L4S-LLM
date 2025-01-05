@@ -206,7 +206,11 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
             continue  # Skip to the next iteration of the loop
         print("current_queue_delay",states[0][0][3])
         print("length_in_bytes",states[0][0][6])
-        cur_datapoint_idx = find_nearest_length(df_ats, float(states[0][0][6]))
+        print("packet_length",states[0][0][8])
+        new_queue_length = float(states[0][0][6])
+        if new_action == 0 or new_action == 2:
+            new_queue_length = (float(states[0][0][6]) + float(states[0][0][8]))
+        cur_datapoint_idx = find_nearest_length(df_ats, new_queue_length)
         print("datapoint",cur_datapoint_idx)
         if ep_index % llm_freq == 0:
             start_iloc = cur_datapoint_idx
