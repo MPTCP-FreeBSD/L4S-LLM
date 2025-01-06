@@ -155,7 +155,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     # print("*-*-"*80)
     # df.to_csv("first_save.csv")
 
-    max_ep_len = 1600
+    max_ep_len = 3600
     llm_freq = 10
 
     row = df.iloc[0]
@@ -202,11 +202,17 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         # print(df_ats.describe())
 
         if df_ats.empty:
-            print("df_ats is empty, skipping this batch.")
+            # Save this message to a separate text file
+            print("new_action",new_action.item())
+            print("queue_type",states[0][0][0])
+            with open("output_log.txt", "a") as file:
+                file.write("df_ats is empty, skipping this batch.\n")
+
             continue  # Skip to the next iteration of the loop
         print("current_queue_delay",states[0][0][3])
         print("length_in_bytes",states[0][0][6])
         print("packet_length",states[0][0][8])
+        print("types(states)",type(states))
         new_queue_length = float(states[0][0][6])
         if new_action == 0 or new_action == 2:
             new_queue_length = (float(states[0][0][6]) + float(states[0][0][8]))

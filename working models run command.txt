@@ -10,3 +10,6 @@ python run_plm.py --adapt --grad-accum-steps 32 --plm-type gpt2 --plm-size small
 
 #To run t5-lm
 python run_plm.py --adapt --grad-accum-steps 32 --plm-type t5-lm --plm-size base --rank -1 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2
+
+
+python run_seqtest.py --adapt --grad-accum-steps 32 --plm-type llama --plm-size base --rank 128 --device cuda:0 --lr 0.0001 --warmup-steps 2000 --num-epochs 80 --eval-per-epoch 2 
