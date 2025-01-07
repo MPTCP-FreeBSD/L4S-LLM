@@ -1,8 +1,0 @@
-plm_embed_size: 4096
-device: cpu
-max_length: 20
-conv_size: 4
-which_layer: -1
-bitrate_levels: 6
-max_ep_len: 47
-state_feature_dim: 256
