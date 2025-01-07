@@ -68,28 +68,48 @@ PLM_LAYER_SIZES = {
 
 def save_model(args, model, save_dir):
     if args.rank > 0:
-        # save lora weights
+        # Save LoRA weights
         model.plm.save_pretrained(save_dir)
-        # save other modules except plm
+        # Save other modules except PLM
         torch.save(model.modules_except_plm.state_dict(), os.path.join(save_dir, 'modules_except_plm.bin'))
         print("Save_Model: Embedding layer size:", model.modules_except_plm[0].weight.size(0))
     else:
-        # lora is disabled, save whole model
+        # LoRA is disabled, save the whole model
         torch.save(model.state_dict(), os.path.join(save_dir, 'model.bin'))
 
-
 def load_model(args, model, model_dir):
-    print("args.rank",args.rank)
+    print("args.rank:", args.rank)
     if args.rank > 0:
-        # load lora weights
+        # Load LoRA weights
         model.plm.load_adapter(model_dir, adapter_name='default')
-        # load other modules except plm
-        model.modules_except_plm.load_state_dict(torch.load(os.path.join(model_dir, 'modules_except_plm.bin')))
-        print("Load_Model: Embedding layer size:", model.modules_except_plm[0].weight.size(0))
+
+        # Load other modules except PLM
+        saved_state = torch.load(os.path.join(model_dir, 'modules_except_plm.bin'))
+
+        # Adjust to always use saved model weights
+        model_state_dict = model.modules_except_plm.state_dict()
+        for name, param in saved_state.items():
+            if name in model_state_dict:
+                if model_state_dict[name].shape == param.shape:
+                    model_state_dict[name].data.copy_(param)
+                elif model_state_dict[name].shape[0] <= param.shape[0]:
+                    print(f"Truncating weights for {name}: expected {model_state_dict[name].shape}, got {param.shape}")
+                    model_state_dict[name].data.copy_(param[:model_state_dict[name].shape[0]])
+                else:
+                    print(f"Using partial weights for {name}: expected {model_state_dict[name].shape}, got {param.shape}")
+                    model_state_dict[name].data[:param.shape[0]].copy_(param)
+            else:
+                print(f"Adding missing layer {name} from saved model.")
+                model_state_dict[name] = param
+
+        model.modules_except_plm.load_state_dict(model_state_dict, strict=False)
+        # print("Load_Model: Embedding layer size:", model.modules_except_plm[0].weight.size(0))
     else:
-        # lora is disabled, load whole model
+        # LoRA is disabled, load the whole model
         model.load_state_dict(torch.load(os.path.join(model_dir, 'model.bin')))
     return model
+
+
 
 
 def adapt(args, model, exp_dataset, exp_dataset_info, checkpoint_dir, best_model_dir, eval_process_reward_fn):
