@@ -150,11 +150,71 @@ def test_step(args, model, loss_fn, raw_batch, target_return):
 
         # Predict actions using the model
         # actions_pred1 = model(states, actions, returns, timesteps)
-        actions_pred1 = model(states, target_return, timesteps)
+        queue_action = 0
+        actions_pred1, queue_action = model.sample(states, target_return, timesteps)
+
+        
 
         # Permute for loss calculation
         actions_pred = actions_pred1.permute(0, 2, 1)
         loss = loss_fn(actions_pred, labels)
+
+        print("actions_pred1",actions_pred1)
+        print("actions_pred",actions_pred)
+        print("llm-queue_action",queue_action)
+        print("actual-queue_action",labels)
+
+        return loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred
+
+
+def otest_step(args, model, loss_fn, raw_batch, target_return):
+        # Assuming raw_batch is a tuple of numpy arrays or lists
+        states, actions, returns, timesteps = raw_batch
+
+        # # Print original state shape
+        # print("Original states:", states)
+        # print("Original states.shape:", states[0].shape)  # Assuming states is a list of arrays
+
+        # Convert states to tensor and ensure correct shape
+        states = torch.tensor(states[0], dtype=torch.float32).to(args.device).unsqueeze(0)  # Shape [1, 8]
+        # print("Tensor states:", states)
+        # print("Tensor states.shape:", states.shape)  # Should be [1, 8]
+
+        # Convert actions, returns, and timesteps to tensors
+        actions = torch.tensor(actions, dtype=torch.float32).to(args.device)  # Shape [1, 1]
+        returns = torch.tensor(returns, dtype=torch.float32).to(args.device)  # Shape [1, 1]
+        timesteps = torch.tensor(timesteps, dtype=torch.int32).to(args.device)  # Shape [1, 1]
+
+        # # Print shapes after conversion
+        # print("Actions tensor:", actions)
+        # print("Actions tensor shape:", actions.shape)  # Should be [1, 1]
+        # print("Returns tensor:", returns)
+        # print("Returns tensor shape:", returns.shape)  # Should be [1, 1]
+        # print("Timesteps tensor:", timesteps)
+        # print("Timesteps tensor shape:", timesteps.shape)  # Should be [1, 1]
+
+        # Create a batch with the correctly formatted tensors
+        # Wrap states in a list to avoid TypeError in process_batch
+        batch = ([states], [actions], [returns], [timesteps])  # Ensure states is a list
+
+        # Call process_batch
+        states, actions, returns, timesteps, labels = process_batch(batch, device=args.device)
+
+        # Predict actions using the model
+        # actions_pred1 = model(states, actions, returns, timesteps)
+        actions_pred1 = model(states, actions, returns, timesteps)
+
+        
+
+        # Permute for loss calculation
+        actions_pred = actions_pred1.permute(0, 2, 1)
+        loss = loss_fn(actions_pred, labels)
+
+        queue_action = 0
+
+        print("actions_pred1",actions_pred1)
+        print("actions_pred",actions_pred)
+        print("actual-queue_action",labels)
 
         return loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred
 
@@ -172,7 +232,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     df =  convert_exp_pool_to_dataframe(exp_pool)
     # print(df.columns)
     # print(df.shape)
-    print(df.describe())
+    # print(df.describe())
     # print(df.head(5))
     # print("**"*10)
     # print(df.tail(5))
@@ -205,7 +265,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         done=0
         batch = [state],[current_action],[reward],[done]
         # print("batch",batch)
-        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch,target_return)
+        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = otest_step(args, model, loss_fn, batch,target_return)
 
         # print("actions_pred",actions_pred)
         # print("actions_pred.shape",actions_pred.shape)
@@ -231,41 +291,43 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         # print(df_ats.head(3))
         # print(df_ats.describe())
 
-        print(df_ats.head())
-        print("*"*10)
-        print(df_qt.head())
+        # print(df_ats.head())
+        # print("*"*10)
+        # print(df_qt.head())
 
         if df_ats.empty:
             # Save this message to a separate text file
-            print("new_action",new_action.item())
-            print("queue_type",states[0][0][0])
-            with open("output_log.txt", "a") as file:
-                file.write(str(ep_index))
-                file.write(" : df_ats is empty, skipping this batch.\n")                
-                file.write("df_qt empty?:")
-                file.write(str(df_qt.empty))
-                file.write("\n")
-                file.write("new_action?:")
-                file.write(str(new_action.item()))
-                file.write("\n")
-                file.write("queue_type?:")
-                file.write(str(int(states[0][0][col_dict['queue_type']])))
-                file.write("\n")
-                file.write("-:"*10)
-                file.write("\n")
+            # print("new_action",new_action.item())
+            # print("queue_type",states[0][0][0])
+            # with open("output_log.txt", "a") as file:
+            #     file.write(str(ep_index))
+            #     file.write(" : df_ats is empty, skipping this batch.\n")                
+            #     file.write("df_qt empty?:")
+            #     file.write(str(df_qt.empty))
+            #     file.write("\n")
+            #     file.write("new_action?:")
+            #     file.write(str(new_action.item()))
+            #     file.write("\n")
+            #     file.write("queue_type?:")
+            #     file.write(str(int(states[0][0][col_dict['queue_type']])))
+            #     file.write("\n")
+            #     file.write("-:"*10)
+            #     file.write("\n")
 
             continue  # Skip to the next iteration of the loop
-        print("current_queue_delay",states[0][0][col_dict['current_queue_delay']])
-        print("length_in_bytes",states[0][0][col_dict['length_in_bytes']])
-        print("packet_length",states[0][0][col_dict['packet_length']])
-        print("types(states)",type(states))
+        # print("current_queue_delay",states[0][0][col_dict['current_queue_delay']])
+        # print("length_in_bytes",states[0][0][col_dict['length_in_bytes']])
+        # print("packet_length",states[0][0][col_dict['packet_length']])
+        # print("types(states)",type(states))
         new_queue_length = float(states[0][0][col_dict['length_in_bytes']])
+        print("new_action",new_action.item())
         if new_action == 0 or new_action == 2:
             new_queue_length = (float(states[0][0][col_dict['length_in_bytes']]) + float(states[0][0][col_dict['packet_length']]))
         cur_datapoint_idx = find_nearest_length(df_ats, new_queue_length)
         print("datapoint",cur_datapoint_idx)
         if ep_index % llm_freq == 0:
             start_iloc = cur_datapoint_idx
+            model.reset_dq()
         else:
             start_iloc+=1
 
@@ -308,7 +370,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         done=0
         batch = [state],[current_action],[reward],[done]
         # print("batch",batch)
-        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch)
+        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = otest_step(args, model, loss_fn, batch,target_return)
 
 
         print(f'Step {ep_index} - test_loss.item() {test_loss.item()}')

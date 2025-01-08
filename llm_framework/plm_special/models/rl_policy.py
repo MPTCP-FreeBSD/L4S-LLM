@@ -147,6 +147,11 @@ class OfflineRLPolicy(nn.Module):
         action_pred = self.action_head(logits_used)
 
         return action_pred
+    
+    def reset_dq(self):
+        self.states_dq = deque([torch.zeros((1, 0, self.plm_embed_size), device=self.device)], maxlen=self.max_length)
+        self.returns_dq = deque([torch.zeros((1, 0, self.plm_embed_size), device=self.device)], maxlen=self.max_length)
+        self.actions_dq = deque([torch.zeros((1, 0, self.plm_embed_size), device=self.device)], maxlen=self.max_length)
 
     def sample(self, state, target_return, timestep, **kwargs):
         """
@@ -207,8 +212,8 @@ class OfflineRLPolicy(nn.Module):
         # Step 6: predict the bitrate for next chunk
         logits_used = logits[:, -1:]
         action_pred = self.action_head(logits_used)
-        action_pred = action_pred.reshape(-1)
-        bitrate, _ = self._sample(action_pred)
+        action_pred1 = action_pred.reshape(-1)
+        bitrate, _ = self._sample(action_pred1)
 
         # compute action embeddings 
         action_tensor = torch.zeros(1, 1, 1, dtype=torch.float32, device=self.device)
@@ -220,7 +225,7 @@ class OfflineRLPolicy(nn.Module):
         self.states_dq.append(state_embeddings) 
         self.actions_dq.append(action_embeddings)
 
-        return bitrate
+        return action_pred,bitrate
     
     def clear_dq(self):
         self.states_dq.clear()
@@ -231,8 +236,16 @@ class OfflineRLPolicy(nn.Module):
         self.actions_dq.append(torch.zeros((1, 0, self.plm_embed_size), device=self.device))
         self.returns_dq.append(torch.zeros((1, 0, self.plm_embed_size), device=self.device))
 
+# When given weights, `random.choices()` selects elements from the sequence based on their relative probabilities, 
+# with higher weights making an element more likely to be chosen.
+    # def _sample(self, logits):
+    #     pi = F.softmax(logits, 0).cpu().detach().numpy()
+    #     idx = random.choices(np.arange(pi.size), pi)[0]
+    #     lgprob = np.log(pi[idx])
+    #     return idx, lgprob
+
     def _sample(self, logits):
         pi = F.softmax(logits, 0).cpu().detach().numpy()
-        idx = random.choices(np.arange(pi.size), pi)[0]
+        idx = np.argmax(pi)  # Select the index with the highest probability
         lgprob = np.log(pi[idx])
         return idx, lgprob
