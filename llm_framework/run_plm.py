@@ -12,12 +12,9 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 
 from config import cfg
-from baseline_special.utils.utils import load_traces
-ACTION_LEVELS = 3
+from plm_special.utils.constants import ACTION_LEVELS
 from plm_special.trainer import Trainer
-from plm_special.evaluate import evaluate_on_env
-from plm_special.test import test_on_env
-from plm_special.testing import ntesting
+from plm_special.test_seq import testenvsim
 from plm_special.data.dataset import ExperienceDataset
 from plm_special.models.rl_policy import OfflineRLPolicy
 from plm_special.models.state_encoder import EncoderNetwork
@@ -71,29 +68,51 @@ PLM_LAYER_SIZES = {
 
 def save_model(args, model, save_dir):
     if args.rank > 0:
-        # save lora weights
+        # Save LoRA weights
         model.plm.save_pretrained(save_dir)
-        # save other modules except plm
+        # Save other modules except PLM
         torch.save(model.modules_except_plm.state_dict(), os.path.join(save_dir, 'modules_except_plm.bin'))
+        # print("Save_Model: Embedding layer size:", model.modules_except_plm[0].weight.size(0))
     else:
-        # lora is disabled, save whole model
+        # LoRA is disabled, save the whole model
         torch.save(model.state_dict(), os.path.join(save_dir, 'model.bin'))
 
-
 def load_model(args, model, model_dir):
-    print("args.rank",args.rank)
+    print("args.rank:", args.rank)
     if args.rank > 0:
-        # load lora weights
+        # Load LoRA weights
         model.plm.load_adapter(model_dir, adapter_name='default')
-        # load other modules except plm
-        model.modules_except_plm.load_state_dict(torch.load(os.path.join(model_dir, 'modules_except_plm.bin')))
+
+        # Load other modules except PLM
+        saved_state = torch.load(os.path.join(model_dir, 'modules_except_plm.bin'))
+
+        # Adjust to always use saved model weights
+        model_state_dict = model.modules_except_plm.state_dict()
+        for name, param in saved_state.items():
+            if name in model_state_dict:
+                if model_state_dict[name].shape == param.shape:
+                    model_state_dict[name].data.copy_(param)
+                elif model_state_dict[name].shape[0] <= param.shape[0]:
+                    print(f"Truncating weights for {name}: expected {model_state_dict[name].shape}, got {param.shape}")
+                    model_state_dict[name].data.copy_(param[:model_state_dict[name].shape[0]])
+                else:
+                    print(f"Using partial weights for {name}: expected {model_state_dict[name].shape}, got {param.shape}")
+                    model_state_dict[name].data[:param.shape[0]].copy_(param)
+            else:
+                print(f"Adding missing layer {name} from saved model.")
+                model_state_dict[name] = param
+
+        model.modules_except_plm.load_state_dict(model_state_dict, strict=False)
+        # print("Load_Model: Embedding layer size:", model.modules_except_plm[0].weight.size(0))
     else:
-        # lora is disabled, load whole model
+        # LoRA is disabled, load the whole model
         model.load_state_dict(torch.load(os.path.join(model_dir, 'model.bin')))
     return model
 
 
-def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpoint_dir, best_model_dir, eval_process_reward_fn):
+
+
+def adapt(args, model, exp_dataset, exp_dataset_info, checkpoint_dir, best_model_dir, eval_process_reward_fn):
     optimizer = AdamW(
         model.parameters(),
         lr=args.lr,
@@ -131,24 +150,36 @@ def adapt(args, model, exp_dataset, exp_dataset_info, eval_env_settings, checkpo
 
         if min_loss > mean_loss:
             save_model(args, model, best_model_dir)
-            print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
-            print("Epoch Index of Best Model:", epoch)
-            print('Best model saved at:', best_model_dir)
-            # Open a file in write mode
-            with open("best_model.txt", "a") as file:
-                # Write the number to the file
-                file.write("---------------------------------")
-                file.write(str(epoch))
-                file.write("---------------------------------\n")
-            print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
-    
+            # print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
+            # print("Epoch Index of Best Model:", epoch)
+            # print('Best model saved at:', best_model_dir)
+            # # # Open a file in write mode
+            # # with open("best_model.txt", "a") as file:
+            # #     # Write the number to the file
+            # #     file.write("---------------------------------")
+            # #     file.write(str(epoch))
+            # #     file.write("---------------------------------\n")
+            # # print("=-=-=-=-=-=-=-=-=-=-=-=-=-")
+    model = load_model(args, model, best_model_dir)
     train_losses_path = os.path.join(checkpoint_dir, 'train_losses.txt')
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
-    exp_pool_path = "./data/exp_pools/exp_pool_l4s_test.pkl"
+
+
+    exp_pool_path = "./data/exp_pools/exp_pool_l4s_eval.pkl"
     exp_pool = pickle.load(open(exp_pool_path, 'rb'))
-    logs, test_lossess = ntesting(args, model, exp_pool , loss_fn, batch_size=1)
+    testenvsim(args, model, exp_pool , target_return, loss_fn, eval_process_reward_fn)
 
 
+def test(args, model, exp_dataset_info, model_dir, result_dir, eval_process_reward_fn):
+    exp_pool_path = "./data/exp_pools/exp_pool_l4s_eval.pkl"
+    exp_pool = pickle.load(open(exp_pool_path, 'rb'))
+    loss_fn = CrossEntropyLoss()
+    model = load_model(args, model, model_dir)
+    target_return = exp_dataset_info.max_return * args.target_return_scale
+    testenvsim(args, model, exp_pool , target_return, loss_fn, eval_process_reward_fn)
+    
+    print('Load model from:', model_dir)
+    print('Results saved at:', result_dir)
 
 
 
@@ -156,31 +187,10 @@ def run(args):
     assert args.plm_type in cfg.plm_types
     assert args.plm_size in cfg.plm_sizes
     assert args.exp_pool_path is not None, 'please specify a experience pool path for training'
-    assert args.trace in cfg.trace_dirs.keys()
-    assert args.video in cfg.video_size_dirs.keys()
 
     # 1. set seed
     set_random_seed(args.seed)
 
-    # 2. create environment setting
-    trace_dir = cfg.trace_dirs[args.trace]
-    video_size_dir = cfg.video_size_dirs[args.video]
-    all_cooked_time ,all_cooked_bw ,all_file_names, all_mahimahi_ptrs = load_traces(trace_dir)
-    args.trace_num = min(args.trace_num, len(all_file_names))
-    if args.trace_num == -1:
-        args.trace_num = len(all_file_names)
-    if args.trace_num == len(all_file_names):
-        args.fixed_order = True
-
-    env_settings = {
-        'all_cooked_time': all_cooked_time,
-        'all_cooked_bw': all_cooked_bw,
-        'all_file_names': all_file_names,
-        'all_mahimahi_ptrs': all_mahimahi_ptrs,
-        'video_size_dir': video_size_dir,
-        'fixed': args.fixed_order,
-        'trace_num': args.trace_num,
-    }
 
     exp_pool_path = "Nothing Empty"
 
@@ -188,7 +198,7 @@ def run(args):
         exp_pool_path = "./data/exp_pools/exp_pool_l4s_train.pkl"
 
     if args.test:
-        exp_pool_path = "./data/exp_pools/exp_pool_l4s_test.pkl"
+        exp_pool_path = "./data/exp_pools/exp_pool_l4s_eval.pkl"
 
 
     # 3. create training dataset, fetch info
@@ -224,7 +234,7 @@ def run(args):
     # 4.3 create rl policy
     plm_embed_size = cfg.plm_embed_sizes[args.plm_type][args.plm_size]
     max_ep_len = exp_dataset_info.max_timestep + 1
-    rl_policy = OfflineRLPolicy(state_feature_dim=args.state_feature_dim, ACTION_LEVELS=ACTION_LEVELS, state_encoder=state_encoder, plm=plm, plm_embed_size=plm_embed_size, 
+    rl_policy = OfflineRLPolicy(state_feature_dim=args.state_feature_dim, action_levels=ACTION_LEVELS, state_encoder=state_encoder, plm=plm, plm_embed_size=plm_embed_size, 
                                            max_length=args.w, max_ep_len=max_ep_len, device=args.device, device_out=args.device_out, which_layer=args.which_layer)
 
     # 5. handling directory and path
@@ -257,7 +267,7 @@ def run(args):
             os.makedirs(best_model_dir)
         console_log = open(os.path.join(models_dir, f'early_stop_{args.which_layer}_console.log'), 'w')
         sys.stdout = ConsoleLogger(sys.__stdout__, console_log)
-        adapt(args, rl_policy, exp_dataset, exp_dataset_info, env_settings, checkpoint_dir, best_model_dir, process_reward)
+        adapt(args, rl_policy, exp_dataset, exp_dataset_info, checkpoint_dir, best_model_dir, process_reward)
     if args.test:
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
@@ -270,7 +280,7 @@ def run(args):
         model = load_model(args, rl_policy, model_dir)
         target_return = exp_dataset_info.max_return * args.target_return_scale
         loss_fn = CrossEntropyLoss()
-        logs, test_lossess = ntesting(args, model, loss_fn, batch_size=1)
+        test(args, rl_policy, exp_dataset_info, model_dir, results_dir, process_reward)
 
 
 if __name__ == '__main__':

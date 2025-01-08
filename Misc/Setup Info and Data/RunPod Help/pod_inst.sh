@@ -20,7 +20,7 @@ sudo scp -P 22116 -p -i ~/.ssh/id_ed25519 -r NetLLM-Personal root@69.30.85.116:/
 
 
 scp -P 22001 -p -i ~/.ssh/id_ed25519 -r root@69.30.85.111:/workspace/NetLLM/llm_framework /runpodmodelfiles
-scp -P 22001 -p -i ~/.ssh/id_ed25519 -r root@69.30.85.111:/workspace/NetLLM/llm_framework/artifacts /runpodresults
+scp -P 22001 -p -i ~/.ssh/id_ed25519 -r root@69.30.85.111:/workspace/NetLLM/llm_framework/data /runpodresults
 ssh root@69.30.85.111 -p 22001 -i ~/.ssh/id_ed25519
 
 

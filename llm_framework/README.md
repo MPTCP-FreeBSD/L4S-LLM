@@ -7,7 +7,7 @@ divided into multiple chunks, each of which represents a few seconds of the over
 is structured to be a linear combination of selected bitrate and the stall when downloading the corresponding chunk.
 
 # Code Structure
-- `artifacts`: This directory stores some artifacts, e.g., result files.
+- `data`: This directory stores some data, e.g., result files.
    - `exp_pool`: This directory stores the experience pool files, which will be used for LLM adaptation.
    - `results`: This directory stores the result files.
 

@@ -14,7 +14,7 @@ class OfflineRLPolicy(nn.Module):
     def __init__(
             self,
             state_feature_dim,
-            ACTION_LEVELS,
+            action_levels,
             state_encoder,
             plm,
             plm_embed_size,
@@ -32,7 +32,7 @@ class OfflineRLPolicy(nn.Module):
         if device_out is None:
             device_out = device
 
-        self.ACTION_LEVELS = ACTION_LEVELS
+        self.action_levels = action_levels
         self.max_length = max_length
 
         self.plm = plm
@@ -56,9 +56,9 @@ class OfflineRLPolicy(nn.Module):
         self.embed_ln = nn.LayerNorm(plm_embed_size).to(device)
         # =========== multimodal encoder (end) ===========
     
-        self.action_head = nn.Linear(plm_embed_size, ACTION_LEVELS).to(device)  # the so-called L4S head in our paper
+        self.action_head = nn.Linear(plm_embed_size, action_levels).to(device)  # the so-called L4S head in our paper
 
-        print("rl_policy: ACTION_LEVELS",ACTION_LEVELS)
+        print("rl_policy: action_levels",action_levels)
 
         self.device = device
         self.device_out = device_out
@@ -212,7 +212,7 @@ class OfflineRLPolicy(nn.Module):
 
         # compute action embeddings 
         action_tensor = torch.zeros(1, 1, 1, dtype=torch.float32, device=self.device)
-        action_tensor[..., 0] = (bitrate + 1) / self.ACTION_LEVELS
+        action_tensor[..., 0] = (bitrate + 1) / self.action_levels
         action_embeddings = self.embed_action(action_tensor) + time_embeddings
         
         # update deques
@@ -232,7 +232,7 @@ class OfflineRLPolicy(nn.Module):
         self.returns_dq.append(torch.zeros((1, 0, self.plm_embed_size), device=self.device))
 
     def _sample(self, logits):
-        pi = F.softmax(logits, 0).cpu().numpy()
+        pi = F.softmax(logits, 0).cpu().detach().numpy()
         idx = random.choices(np.arange(pi.size), pi)[0]
         lgprob = np.log(pi[idx])
         return idx, lgprob

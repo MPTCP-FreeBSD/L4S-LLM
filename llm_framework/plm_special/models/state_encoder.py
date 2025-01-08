@@ -9,16 +9,16 @@ class EncoderNetwork(nn.Module):
     The encoder network for encoding each piece of information of the state.
     This design of the network is from Pensieve/Genet.
     """
-    def __init__(self, conv_size=4, ACTION_LEVELS=3, embed_dim=128):
+    def __init__(self, conv_size=4, action_levels=3, embed_dim=128):
         super().__init__()
         self.past_k = conv_size
-        self.ACTION_LEVELS = 3
+        self.action_levels = 3
         self.embed_dim = embed_dim
         # self.fc1 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  # last bitrate
         # self.fc2 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  # current buffer size
         # self.conv3 = nn.Sequential(nn.Conv1d(1, embed_dim, conv_size), nn.LeakyReLU(), nn.Flatten())  # past k throughput
         # self.conv4 = nn.Sequential(nn.Conv1d(1, embed_dim, conv_size), nn.LeakyReLU(), nn.Flatten())  # past k download time
-        # self.conv5 = nn.Sequential(nn.Conv1d(1, embed_dim, ACTION_LEVELS), nn.LeakyReLU(), nn.Flatten())  # next chunk sizes
+        # self.conv5 = nn.Sequential(nn.Conv1d(1, embed_dim, action_levels), nn.LeakyReLU(), nn.Flatten())  # next chunk sizes
         # self.fc6 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  # remain chunks   
          
            
@@ -47,7 +47,7 @@ class EncoderNetwork(nn.Module):
         # current_buffer_size = state[..., 1:2, -1]
         # throughputs = state[..., 2:3, :]
         # download_time = state[..., 3:4, :]
-        # next_chunk_size = state[..., 4:5, :self.ACTION_LEVELS]
+        # next_chunk_size = state[..., 4:5, :self.action_levels]
         # remain_chunks = state[..., 5:6, -1]
 
 

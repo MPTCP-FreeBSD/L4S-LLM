@@ -14,6 +14,29 @@ import random
 import pickle
 
 
+col_dict = {
+    'queue_type': 0,
+    'burst_allowance': 1,
+    'drop_probability': 2,
+    'current_queue_delay': 3,
+    'accumulated_probability': 4,
+    'average_dequeue_time': 5,
+    'length_in_bytes': 6,
+    'total_drops': 7,
+    'packet_length': 8
+}
+
+
+col_dict = {
+    'queue_type': 0,
+    'burst_allowance': 1,
+    'drop_probability': 2,
+    'current_queue_delay': 3,
+    'accumulated_probability': 4,
+    'length_in_bytes': 5,
+    'packet_length': 6
+}
+
 def tensor_to_list(tensor):
         # Detach the tensor and then convert it to a NumPy array and then to a list
         return tensor.detach().cpu().numpy().tolist()
@@ -92,7 +115,7 @@ def find_nearest_length(df, user_input):
 
 
 
-def test_step(args, model, loss_fn, raw_batch):
+def test_step(args, model, loss_fn, raw_batch, target_return):
         # Assuming raw_batch is a tuple of numpy arrays or lists
         states, actions, returns, timesteps = raw_batch
 
@@ -126,7 +149,8 @@ def test_step(args, model, loss_fn, raw_batch):
         states, actions, returns, timesteps, labels = process_batch(batch, device=args.device)
 
         # Predict actions using the model
-        actions_pred1 = model(states, actions, returns, timesteps)
+        # actions_pred1 = model(states, actions, returns, timesteps)
+        actions_pred1 = model(states, target_return, timesteps)
 
         # Permute for loss calculation
         actions_pred = actions_pred1.permute(0, 2, 1)
@@ -155,7 +179,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     # print("*-*-"*80)
     # df.to_csv("first_save.csv")
 
-    max_ep_len = 1600
+    max_ep_len = 600
     llm_freq = 10
 
     row = df.iloc[0]
@@ -164,6 +188,10 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     start_iloc = 0
 
     state_columns = [f'state_{i}' for i in range(len(exp_pool.states[0]))]
+    # Open the file in write mode to truncate it
+    with open('output_log.txt', 'w') as file:
+        pass  # No need to write anything, just truncating the file
+
 
     for ep_index in range(max_ep_len):
         # df.to_csv("second_save.csv")
@@ -177,7 +205,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         done=0
         batch = [state],[current_action],[reward],[done]
         # print("batch",batch)
-        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch)
+        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch,target_return)
 
         # print("actions_pred",actions_pred)
         # print("actions_pred.shape",actions_pred.shape)
@@ -194,28 +222,46 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         # print("new_action",new_action.item())
         # print("type(new_action)",type(new_action.item()))
 
-        df_qt= df[df['state_0']== int(states[0][0][0])]
+        df_qt= df[df['state_0']== int(states[0][0][col_dict['queue_type']])]
+
+
         
-        df_ats= df_qt[df_qt['actions']== int(new_action)]
+        df_ats= df_qt[df_qt['actions']== int(new_action.item())]
         # print("df_ats.head(3)")
         # print(df_ats.head(3))
         # print(df_ats.describe())
+
+        print(df_ats.head())
+        print("*"*10)
+        print(df_qt.head())
 
         if df_ats.empty:
             # Save this message to a separate text file
             print("new_action",new_action.item())
             print("queue_type",states[0][0][0])
             with open("output_log.txt", "a") as file:
-                file.write("df_ats is empty, skipping this batch.\n")
+                file.write(str(ep_index))
+                file.write(" : df_ats is empty, skipping this batch.\n")                
+                file.write("df_qt empty?:")
+                file.write(str(df_qt.empty))
+                file.write("\n")
+                file.write("new_action?:")
+                file.write(str(new_action.item()))
+                file.write("\n")
+                file.write("queue_type?:")
+                file.write(str(int(states[0][0][col_dict['queue_type']])))
+                file.write("\n")
+                file.write("-:"*10)
+                file.write("\n")
 
             continue  # Skip to the next iteration of the loop
-        print("current_queue_delay",states[0][0][3])
-        print("length_in_bytes",states[0][0][6])
-        print("packet_length",states[0][0][8])
+        print("current_queue_delay",states[0][0][col_dict['current_queue_delay']])
+        print("length_in_bytes",states[0][0][col_dict['length_in_bytes']])
+        print("packet_length",states[0][0][col_dict['packet_length']])
         print("types(states)",type(states))
-        new_queue_length = float(states[0][0][6])
+        new_queue_length = float(states[0][0][col_dict['length_in_bytes']])
         if new_action == 0 or new_action == 2:
-            new_queue_length = (float(states[0][0][6]) + float(states[0][0][8]))
+            new_queue_length = (float(states[0][0][col_dict['length_in_bytes']]) + float(states[0][0][col_dict['packet_length']]))
         cur_datapoint_idx = find_nearest_length(df_ats, new_queue_length)
         print("datapoint",cur_datapoint_idx)
         if ep_index % llm_freq == 0:
@@ -242,6 +288,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
             'labels': tensor_to_list(labels)
         }
         custom_logs['steps'].append(step_logs)
+        
     # Save custom logs to a JSON file for this epoch
     with open(f'./Logs/eval_logs_llm.json', 'w') as file:
         json.dump(custom_logs, file, indent=4)
