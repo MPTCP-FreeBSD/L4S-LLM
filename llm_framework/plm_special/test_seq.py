@@ -27,15 +27,15 @@ col_dict = {
 }
 
 
-col_dict = {
-    'queue_type': 0,
-    'burst_allowance': 1,
-    'drop_probability': 2,
-    'current_queue_delay': 3,
-    'accumulated_probability': 4,
-    'length_in_bytes': 5,
-    'packet_length': 6
-}
+# col_dict = {
+#     'queue_type': 0,
+#     'burst_allowance': 1,
+#     'drop_probability': 2,
+#     'current_queue_delay': 3,
+#     'accumulated_probability': 4,
+#     'length_in_bytes': 5,
+#     'packet_length': 6
+# }
 
 def tensor_to_list(tensor):
         # Detach the tensor and then convert it to a NumPy array and then to a list
@@ -239,7 +239,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
     # print("*-*-"*80)
     # df.to_csv("first_save.csv")
 
-    max_ep_len = 600
+    max_ep_len = 3600
     llm_freq = 10
 
     row = df.iloc[0]
@@ -265,7 +265,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
         done=0
         batch = [state],[current_action],[reward],[done]
         # print("batch",batch)
-        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = otest_step(args, model, loss_fn, batch,target_return)
+        test_loss, states, actions, returns, timesteps, labels, actions_pred1, actions_pred = test_step(args, model, loss_fn, batch,target_return)
 
         # print("actions_pred",actions_pred)
         # print("actions_pred.shape",actions_pred.shape)
@@ -317,7 +317,7 @@ def testenvsim(args, model, exp_pool, target_return, loss_fn ,process_reward_fn=
             continue  # Skip to the next iteration of the loop
         # print("current_queue_delay",states[0][0][col_dict['current_queue_delay']])
         # print("length_in_bytes",states[0][0][col_dict['length_in_bytes']])
-        # print("packet_length",states[0][0][col_dict['packet_length']])
+        print("packet_length",states[0][0][col_dict['packet_length']])
         # print("types(states)",type(states))
         new_queue_length = float(states[0][0][col_dict['length_in_bytes']])
         print("new_action",new_action.item())

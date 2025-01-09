@@ -29,8 +29,8 @@ class EncoderNetwork(nn.Module):
         self.fc5 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  #  accumulated_probability
         self.fc6 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  #  average_dequeue_time
         self.fc7 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  #  total_bytes
-        # self.fc8 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  #  total_drops
-        # self.fc9 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  #  packet_length
+        self.fc8 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  #  total_drops
+        self.fc9 = nn.Sequential(nn.Linear(1, embed_dim), nn.LeakyReLU())  #  packet_length
 
 
     def forward(self, state):
@@ -41,7 +41,7 @@ class EncoderNetwork(nn.Module):
 
         # Optional: print to console for verification
         # print("Output written to output_life.txt")
-        state = state.reshape(batch_size * seq_len, 7, 1)
+        state = state.reshape(batch_size * seq_len, 9, 1)
         
         # last_bitrate = state[..., 0:1, -1]
         # current_buffer_size = state[..., 1:2, -1]
@@ -58,8 +58,8 @@ class EncoderNetwork(nn.Module):
         feature5 = state[..., 4:5, :]
         feature6 = state[..., 5:6, :]
         feature7 = state[..., 6:7, :]
-        # feature8 = state[..., 7:8, :]
-        # feature9 = state[..., 8:9, :]
+        feature8 = state[..., 7:8, :]
+        feature9 = state[..., 8:9, :]
         
         # features1 = self.fc1(last_bitrate).reshape(batch_size, seq_len, -1)
         # features2 = self.fc2(current_buffer_size).reshape(batch_size, seq_len, -1)
@@ -75,11 +75,12 @@ class EncoderNetwork(nn.Module):
         features5 = self.fc5(feature5).reshape(batch_size, seq_len, -1)
         features6 = self.fc6(feature6).reshape(batch_size, seq_len, -1)
         features7 = self.fc7(feature7).reshape(batch_size, seq_len, -1)
-        # features8 = self.fc8(feature8).reshape(batch_size, seq_len, -1)
-        # features9 = self.fc8(feature9).reshape(batch_size, seq_len, -1)
+        features8 = self.fc8(feature8).reshape(batch_size, seq_len, -1)
+        features9 = self.fc8(feature9).reshape(batch_size, seq_len, -1)
 
 
 
         
 
-        return features1, features2, features3, features4, features5, features6, features7
+        return features1, features2, features3, features4, features5, features6, features7 , features8, features9
+
