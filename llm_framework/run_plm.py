@@ -165,9 +165,9 @@ def adapt(args, model, exp_dataset, exp_dataset_info, checkpoint_dir, best_model
     np.savetxt(train_losses_path, total_train_losses, fmt='%.6f', delimiter='\n')
 
 
-    exp_pool_path = "./data/exp_pools/exp_pool_l4s_eval.pkl"
-    exp_pool = pickle.load(open(exp_pool_path, 'rb'))
-    testenvsim(args, model, exp_pool , target_return, loss_fn, eval_process_reward_fn)
+    # exp_pool_path = "./data/exp_pools/exp_pool_l4s_eval.pkl"
+    # exp_pool = pickle.load(open(exp_pool_path, 'rb'))
+    # testenvsim(args, model, exp_pool , target_return, loss_fn, eval_process_reward_fn)
 
 
 def test(args, model, exp_dataset_info, model_dir, result_dir, eval_process_reward_fn):
