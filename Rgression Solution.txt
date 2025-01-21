@@ -1,0 +1,64 @@
+If you're dealing with a regression problem where the output needs to be within the range [0, 1], and you want to avoid using the `Sigmoid` function (which is commonly used for classification), you can explore the following alternatives:
+
+### 1. **Softmax (for multi-output regression)**
+   If you have multiple output features and want to scale each of them between 0 and 1, you can use the **Softmax** function, which normalizes the outputs to sum up to 1 and ensures each value is in the range [0, 1]. This is suitable for multi-output regression problems where the outputs are dependent on each other.
+
+   ```python
+   self.action_head = nn.Sequential(
+       nn.Linear(in_features=plm_embed_size, out_features=action_levels),
+       nn.Softmax(dim=-1)
+   ).to(device)
+   ```
+
+   The `dim=-1` ensures that Softmax is applied across the output dimension.
+
+### 2. **Custom Scaling**
+   If you're aiming to scale the output values directly, one approach is to **scale the output** of a standard activation function (like a `Linear` layer) manually.
+
+   For example, you can use a **ReLU** activation and then scale the output to the range [0, 1]:
+
+   ```python
+   self.action_head = nn.Sequential(
+       nn.Linear(in_features=plm_embed_size, out_features=action_levels),
+       nn.ReLU(),
+       nn.Lambda(lambda x: x / (x.max() + 1e-6))  # Scaling to [0, 1]
+   ).to(device)
+   ```
+
+   Here, the output is scaled to the range [0, 1] by dividing by the maximum value in the output.
+
+### 3. **Clipping the Output**
+   If your model is trained with unbounded outputs and you want to clip the values within the range [0, 1], you can apply a simple clipping technique after the linear layer:
+
+   ```python
+   self.action_head = nn.Sequential(
+       nn.Linear(in_features=plm_embed_size, out_features=action_levels)
+   ).to(device)
+
+   # Clipping output manually after the model forward pass
+   def forward(self, x):
+       output = self.action_head(x)
+       return output.clamp(min=0, max=1)  # Ensures output stays within [0, 1]
+   ```
+
+   This ensures that after each forward pass, the output values are clipped between 0 and 1.
+
+### 4. **Scaled Tanh (for regression within [0, 1])**
+   If you like the `Tanh` activation but want to modify it to produce outputs in the range [0, 1], you can scale it:
+
+   ```python
+   self.action_head = nn.Sequential(
+       nn.Linear(in_features=plm_embed_size, out_features=action_levels),
+       nn.Tanh(),
+       nn.Lambda(lambda x: 0.5 * (x + 1))  # Scales Tanh to [0, 1]
+   ).to(device)
+   ```
+
+   Here, the `Tanh` output (which is in the range \([-1, 1]\)) is shifted and scaled to the desired range [0, 1].
+
+### Summary
+For a regression task where the output should be in the range [0, 1], the most straightforward approach is:
+
+1. **Sigmoid**: For a simple regression task where outputs are probabilities or continuous values in [0, 1].
+2. **ReLU with scaling**: If you want flexibility and control over how the outputs are bounded.
+3. **Clipping**: After a standard linear regression, you can manually clip the values to the desired range.
