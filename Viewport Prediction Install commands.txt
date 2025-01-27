@@ -1,0 +1,11 @@
+# Step 1: Create the environment
+conda create -n vp_netllm python=3.8.10
+
+# Step 2: Activate the environment
+conda activate vp_netllm
+
+# Step 3: Install dependencies
+pip install torch==2.1.0 numpy==1.24.4 munch==4.0.0 transformers==4.34.1 peft==0.6.2
+
+# Optional: Verify the installation
+python -c "import torch; import numpy; import munch; import transformers; import peft; print(torch.__version__, numpy.__version__, munch.__version__, transformers.__version__, peft.__version__)"

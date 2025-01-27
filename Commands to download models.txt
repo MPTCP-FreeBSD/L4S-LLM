@@ -1,0 +1,34 @@
+# Create HuggingFace user Login and create Token
+huggingface-cli login
+
+huggingface-cli download meta-llama/Llama-2-7b-hf --local-dir ../downloaded_plms/llama/base
+
+huggingface-cli download facebook/opt-1.3b --local-dir ../downloaded_plms/opt/base
+
+huggingface-cli download openai-community/gpt2 --local-dir ../downloaded_plms/gpt2/base
+
+huggingface-cli download google-t5/t5-base --local-dir ../downloaded_plms/t5-lm/base
+
+
+###################################################################################################
+
+
+
+
+
+
+
+
+
+
+huggingface-cli download mistralai/Mistral-7B-v0.1 --local-dir ../downloaded_plms/mistral/base
+huggingface-cli download mistralai/Mistral-7B-v0.3 --local-dir ../downloaded_plms/mistral3/base
+
+huggingface-cli download mistralai/Mixtral-8x7B-v0.1 --local-dir ../downloaded_plms/mistral8-7v-0.1/base
+
+
+llava-hf/llava-1.5-7b-hf
+
+huggingface-cli download llava-hf/llava-1.5-7b-hf --local-dir ../downloaded_plms/llava/base
+
+openai-community/gpt2
