@@ -12,6 +12,102 @@ huggingface-cli download google-t5/t5-base --local-dir ../downloaded_plms/t5-lm/
 
 ###################################################################################################
 
+huggingface Links
+
+https://huggingface.co/meta-llama/Llama-2-7b
+
+https://huggingface.co/facebook/opt-1.3b/tree/main
+
+https://huggingface.co/openai-community/gpt2
+
+https://huggingface.co/google-t5/t5-base
+
+
+###################################################################################################
+Google Scholar Links:
+Llama2
+
+https://scholar.google.com.au/scholar?hl=en&as_sdt=0%2C5&q=llama2&btnG=#d=gs_cit&t=1738020914770&u=%2Fscholar%3Fq%3Dinfo%3AnEiP8_IhzpQJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den
+
+@article{touvron2023llama,
+  title={Llama 2: Open foundation and fine-tuned chat models},
+  author={Touvron, Hugo and Martin, Louis and Stone, Kevin and Albert, Peter and Almahairi, Amjad and Babaei, Yasmine and Bashlykov, Nikolay and Batra, Soumya and Bhargava, Prajjwal and Bhosale, Shruti and others},
+  journal={arXiv preprint arXiv:2307.09288},
+  year={2023}
+}
+
+
+
+OPT
+https://scholar.google.com.au/scholar?hl=en&as_sdt=0%2C5&q=opt&btnG=#d=gs_cit&t=1738020901811&u=%2Fscholar%3Fq%3Dinfo%3AGK0SnOofwlkJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den
+
+@article{zhang2022opt,
+  title={Opt: Open pre-trained transformer language models},
+  author={Zhang, Susan and Roller, Stephen and Goyal, Naman and Artetxe, Mikel and Chen, Moya and Chen, Shuohui and Dewan, Christopher and Diab, Mona and Li, Xian and Lin, Xi Victoria and others},
+  journal={arXiv preprint arXiv:2205.01068},
+  year={2022}
+}
+
+
+GPT2 Link:
+
+https://scholar.google.com.au/scholar?hl=en&as_sdt=0%2C5&q=Language+Models+are+Unsupervised+Multitask+Learners&btnG=
+
+@article{radford2019language,
+  title={Language models are unsupervised multitask learners},
+  author={Radford, Alec and Wu, Jeffrey and Child, Rewon and Luan, David and Amodei, Dario and Sutskever, Ilya and others},
+  journal={OpenAI blog},
+  volume={1},
+  number={8},
+  pages={9},
+  year={2019}
+}
+
+T5 LLM
+
+https://scholar.google.com/scholar?lr&ie=UTF-8&oe=UTF-8&q=Exploring%20the%20Limits%20of%20Transfer%20Learning%20with%20a%20Unified%20Text-to-Text%20Transformer%20Adam%20Roberts%20Colin%20Raffel%20Katherine%20Lee%20Michael%20Matena%20Noam%20Shazeer%20Peter%20J.%20Liu%20Sharan%20Narang%20Wei%20Li%20Yanqi%20Zhou
+https://research.google/pubs/exploring-the-limits-of-transfer-learning-with-a-unified-text-to-text-transformer/
+
+@techreport{48643,title	= {Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer},
+author	= {Adam Roberts and Colin Raffel and Katherine Lee and Michael Matena and Noam Shazeer and Peter J. Liu and Sharan Narang and Wei Li and Yanqi Zhou},
+year	= {2019},institution	= {Google}}
+
+
+
+###################################################################################################
+
+
+Paper Links:
+llama2
+
+https://ai.meta.com/research/publications/llama-2-open-foundation-and-fine-tuned-chat-models/
+
+GPT2
+https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
+
+OPT
+https://arxiv.org/abs/2205.01068
+
+T5-LLM
+https://arxiv.org/abs/1910.10683
+
+###################################################################################################
+
+
+Site Link:
+Llama2
+https://www.llama.com/llama2/
+
+GPT2
+https://openai.com/index/better-language-models/
+
+
+t5-LLM
+https://github.com/google-research/text-to-text-transfer-transformer
+
+
+
+###################################################################################################
 
 
 
