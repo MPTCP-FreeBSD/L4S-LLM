@@ -24,6 +24,20 @@ We have the following folders:
 - **[LLM_Gen_Exp_Pool](https://github.com/MPTCP-FreeBSD/LLM_Gen_Exp_Pool)**:  
   This repository includes code to create distinct training and evaluation experience pools, which are used to feed into our LLM (Large Language Model) for analysis and model training.
 
+# Testbed Setup for L4SLLM Training
+
+We use a FreeBSD-based testbed, configured with VirtualBox, to collect the experiences required for training L4SLLM. The virtual machines (VMs) run FreeBSD 14.1, with a network setup consisting of four VMs: two clients (Client 1 and Client 2), a router, and a server.
+
+- **Client 1** uses Cubic and NewReno congestion control algorithms simultaneously.
+- **Client 2** uses the ECT(1)-enabled DCTCP algorithm.
+- The **router** is configured with the custom DualPI2 algorithm for L4S support.
+
+All clients send data to the server via the router, as shown in Figure 6. Full setup scripts and details are available in the L4S-LLM repository.
+
+
+<img src="https://github.com/user-attachments/assets/3321fb04-94b3-4010-94ea-e9f8b667eb9d" width="500" title="Network L4S-LLM Topology"/>
+
+
 
 
 
