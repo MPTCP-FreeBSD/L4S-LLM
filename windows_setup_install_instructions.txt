@@ -3,7 +3,6 @@ conda create -n abr_netllm python==3.8.10
 
 
 conda create -n llmenv python==3.10.15
-conda create -n llmenv python==3.10.16
 
 conda remove -n abr_netllm --all
 conda remove -n llmenv --all
