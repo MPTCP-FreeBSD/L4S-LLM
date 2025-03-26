@@ -26,7 +26,7 @@ We have the following folders:
 
   ### In Development:
   - **[UbuntuNetworkLab](https://github.com/deol-satish/UbuntuNetworkLab)**: Testing L4S in Ubuntu
-  - **[FreeBSD-UDP-TCP](https://github.com/deol-satish/FreeBSD-UDP-TCP)**:Developing UDP Prague in FreeBSD
+  - **[FreeBSD-UDP-TCP](https://github.com/deol-satish/FreeBSD-UDP-TCP)**: Developing UDP Prague in FreeBSD
 
 # Testbed Setup for L4SLLM Training
 
