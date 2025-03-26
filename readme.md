@@ -25,8 +25,8 @@ We have the following folders:
   This repository includes code to create distinct training and evaluation experience pools, which are used to feed into our LLM (Large Language Model) for analysis and model training.
 
   ### In Development:
-  Testing L4S in Ubuntu:**[UbuntuNetworkLab](https://github.com/deol-satish/UbuntuNetworkLab)**
-  Developing UDP Prague in FreeBSD:**[FreeBSD-UDP-TCP](https://github.com/deol-satish/FreeBSD-UDP-TCP)**
+  - **[UbuntuNetworkLab](https://github.com/deol-satish/UbuntuNetworkLab)**: Testing L4S in Ubuntu
+  - **[FreeBSD-UDP-TCP](https://github.com/deol-satish/FreeBSD-UDP-TCP)**:Developing UDP Prague in FreeBSD
 
 # Testbed Setup for L4SLLM Training
 
